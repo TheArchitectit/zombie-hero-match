@@ -46,3 +46,17 @@ projectile (Soldier: fast tracer; Mage: glowing orb; Ranger: arrow; Cleric: spar
 Necromancer: skull) that impacts the target with a flash. Chain Nova SHALL
 show a lightning arc from the first target to the second; Volley SHALL fire
 a second arrow at a random zombie.
+
+### R8: Combos
+The game SHALL detect and celebrate two combo shapes on every resolve step:
+(a) any single match of 4 or more tiles, and (b) two or more match groups
+resolving simultaneously (from one swap or a cascade). A 4-match pays +250
+score, a 5+-match +500, and each simultaneous group beyond the first adds
++50% damage to every attack that step (DOUBLE x1.5, TRIPLE x2, QUAD x2.5)
+plus +200 score per group. Each combo SHALL show a center-field banner
+(e.g. '4-IN-A-ROW!', 'DOUBLE MATCH! x1.5', or both combined) with a combo
+jingle, and SHALL feed the lifetime stats behind combo achievements.
+#### Scenario: multi-line swap
+Given a swap that completes a horizontal and a vertical match at once, when
+the board resolves, then a 'DOUBLE MATCH! x1.5' banner appears, both groups'
+attacks are multiplied by 1.5, and +400 score is awarded.

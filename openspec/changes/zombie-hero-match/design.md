@@ -48,10 +48,30 @@
     (zhm-v1 -> v2 -> v3); activate deletes older caches, and the page reloads
     itself once on controllerchange so existing users land on the fresh build.
 11. Zombies traverse in ~20-25s (regular), attack the wall for type-based DPS.
-12. Repo: TheArchitectit/zombie-hero-match (public), README-only main, all work on
-    feature branch, no PR, never main.
+12. Repo: TheArchitectit/zombie-hero-match (public). Since 2026-09-13 v4, work lands
+    on main by fast-forward merge from a feature branch, no PR, on Roger's explicit
+    per-release written approval ("No save it all to main" / "Proceed"); GitHub Pages
+    serves from main / and the live URL is re-verified after every merge.
 13. Gates must run green on the exact tree being pushed, before the push
     (v1 shipped with a red parse test; handoff went stale silently - not again).
+14. Combos (v5): detection lives in the resolve step (comboReward), not the swap.
+    4-in-a-row pays +250, 5+ pays +500; simultaneous multi-line groups (one swap or
+    cascade) multiply that step's damage by 1+0.5*(groups-1) and pay +200 per group.
+    Banner is a single #combo element re-triggered by class re-add; combo jingle is
+    a 4-note rising arpeggio on the existing WebAudio synth.
+15. Achievements (v5, zombietoss systems/achievements.js pattern): flat ACH def list
+    {id,name,desc,icon,rarity,cond}; conditions are pure predicates over run state +
+    lifetime stats, polled after kills, wave starts/clears, level-ups, combos, and
+    purchases. Lifetime stats + unlock map persist in localStorage zms_meta,
+    independent of zms_save so new runs never wipe achievements. zombietoss has no
+    list screen; ZHM adds one (ovAch) reachable from title and game over.
+16. Weather (v5, zombietoss-inspired but CSS-only - ZHM has no canvas): one #weather
+    overlay in the battlefield, two tiled gradient layers per condition animated by
+    keyframes (seamless: bg-position shifts equal the tile period), storm adds a
+    #wflash element driven by a 4-7s interval with delayed synth thunder. Gameplay
+    coupling is deliberately light: rain nature heal x1.5, snow ice slow x1.5,
+    fog horde march x0.9, storm bolt damage x1.5. Weather rolls per wave, persists
+    in zms_save, and costs no per-frame JS.
 
 ## Open questions
 - Balance past wave ~8 is untested by hand (HP scaling vs upgrade curve) - tuned

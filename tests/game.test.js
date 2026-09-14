@@ -49,6 +49,29 @@ test('v4 systems present: 5 classes, boss waves, new abilities', () => {
   }
 });
 
+test('v5 systems present: combos, achievements, weather', () => {
+  for (const needle of ['comboBanner', 'comboReward', 'checkAch', 'unlockAch', 'renderAch', 'zms_meta', 'META.stats', 'multiMatches', 'combos4', 'combos5', 'bestChain', 'bossKills', 'closeCall', 'rollWeather', 'applyWeather', 'WEATHERS', '_stormBolt', 'ovAch', 'achList', 'btnAch', 'wflash']) {
+    assert.ok(html.includes(needle), 'missing: ' + needle);
+  }
+});
+
+test('v5 achievement defs are well-formed (unique ids, 15+)', () => {
+  const ids = [...html.matchAll(/\{id:'([a-z0-9]+)',name:'/g)].map(m => m[1]);
+  assert.ok(ids.length >= 15, 'expected 15+ achievements, found ' + ids.length);
+  assert.equal(new Set(ids).size, ids.length, 'duplicate achievement ids');
+});
+
+test('v5 weather set covers clear, rain, snow, fog, storm with gameplay flavor', () => {
+  for (const w of ["clear:{icon:", "rain:{icon:", "snow:{icon:", "fog:{icon:", "storm:{icon:"]) {
+    assert.ok(html.includes(w), 'weather missing: ' + w);
+  }
+  // each non-clear weather couples to gameplay somewhere
+  assert.match(html, /S\.weather==='snow'/);
+  assert.match(html, /S\.weather==='rain'/);
+  assert.match(html, /S\.weather==='fog'/);
+  assert.match(html, /S\.weather==='storm'/);
+});
+
 test('index.html mirrors the game file', () => {
   const idx = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.equal(idx, html);
@@ -61,7 +84,7 @@ test('service worker cache bumped to the current release', () => {
 });
 
 test('save schema round-trips required fields', () => {
-  const save = { classId: 'soldier', wave: 3, gold: 50, maxHp: 125, hp: 100, up: { dmg: 1, vit: 1, greed: 0, perk: 0 }, heroLvl: 4, heroXP: 30 };
+  const save = { classId: 'soldier', wave: 3, gold: 50, maxHp: 125, hp: 100, up: { dmg: 1, vit: 1, greed: 0, perk: 0 }, heroLvl: 4, heroXP: 30, weather: 'storm' };
   const parsed = JSON.parse(JSON.stringify(save));
-  for (const k of ['classId', 'wave', 'gold', 'maxHp', 'hp', 'up', 'heroLvl', 'heroXP']) assert.ok(k in parsed, 'save missing ' + k);
+  for (const k of ['classId', 'wave', 'gold', 'maxHp', 'hp', 'up', 'heroLvl', 'heroXP', 'weather']) assert.ok(k in parsed, 'save missing ' + k);
 });

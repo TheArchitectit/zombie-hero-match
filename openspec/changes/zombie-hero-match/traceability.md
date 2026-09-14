@@ -18,3 +18,6 @@
 | meta R6 | lbRecord/lbTop/lbHtml, zhm_scores | playtest: game over -> rank + board survives reload |
 | meta R7 | gainXP, xpNeed, onLevelUp, HUD xpbar | live: gainXP -> Lv5, HUD updated, toasts |
 | meta R8 | heroUnlocked, activeAbility, castAbility, abBtn | live: Shockwave killed/pushed horde (18s cd); Deep Freeze froze brutes (22s cd) |
+| match3 R8 | comboReward, comboBanner, sfx.combo, attack comboMult | live: forced 4-in-a-row and multi-line swaps show banners, score bonuses, damage x1.5 |
+| meta R9 | ACH defs, META/zms_meta, checkAch/unlockAch, renderAch/ovAch | live: achievement unlocked mid-play, persisted across reload, list shows locked/unlocked; gate: achievement-def integrity test |
+| waves R5 | WEATHERS, rollWeather/applyWeather, weather CSS layers, storm flash interval, weather couplings in attack()/loop() | live: weather rolls visible per wave, storm flash + bolt boost observed; gate: weather coupling test |

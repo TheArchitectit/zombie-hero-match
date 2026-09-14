@@ -4,7 +4,7 @@
 
 ### R1: Save
 The game SHALL persist {classId, wave, gold, score, kills, maxHp, hp, upgrades,
-heroLvl, heroXP} to localStorage on wave start, wave clear, kill, upgrade
+heroLvl, heroXP, weather} to localStorage on wave start, wave clear, kill, upgrade
 purchase, ability cast, and every 5 seconds.
 
 ### R2: Resume
@@ -52,3 +52,21 @@ damage + knockback to all). Mage: Chain Nova (50% arc) / Deep Freeze (22s,
 5 heavy arrows at random zombies). Cleric: Blessing (matches heal the wall)
 / Smite (25s, front 3 hit hard + wall heal 15). Necromancer: Soul Harvest
 (+50% XP from kills) / Death Wave (24s, damages all, scales with kill count).
+
+### R9: Achievements
+The game SHALL track lifetime stats (total kills, boss kills, best wave, combo
+counts, best cascade chain, classes played, close calls) and an unlocked-achievement
+map in localStorage key zms_meta, independent of the run save so achievements
+survive new games. 20 achievements SHALL ship at v5 covering first kill, kill
+milestones (100/500/1000), boss kills (1/5), wave milestones (10/25/50/100),
+combo milestones (4-in-a-row, 5-in-a-row, multi-line, 3x chain), hero levels
+(4/10), gold held (500), playing all 5 classes, a storm-boosted bolt match,
+and clearing a wave under 10 barricade HP. Unlocking SHALL show a trophy toast
+with sound and persist immediately. The title and game-over screens SHALL offer
+an achievements list showing every achievement with its icon, name, description,
+rarity (common/rare/legendary border), and locked vs unlocked state plus an
+unlocked count.
+#### Scenario: first boss kill
+Given a player who has never killed a boss, when the wave-10 boss dies, then a
+trophy toast announces 'Boss Slayer', zms_meta records the unlock, and the
+achievements list shows it unlocked after reload.

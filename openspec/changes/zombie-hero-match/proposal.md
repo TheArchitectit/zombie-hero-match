@@ -28,6 +28,19 @@ external requests), built from mechanics mined from TheArchitectit/zombietoss:
   with Continue on reload.
 - Local leaderboard in localStorage (pattern ported from zombietoss systems/leaderboard.js,
   offline-only): score by kills + wave bonuses, top-50 persisted, top-10 shown.
+- Combo system (v5): 4-in-a-row and 5+-in-a-row matches are detected, announced with a
+  center-field banner + combo jingle, and pay score bonuses (+250/+500). Simultaneous
+  multi-line matches (2+ groups resolving in one swap or cascade) are announced
+  (DOUBLE/TRIPLE/QUAD MATCH) and multiply that step's damage by +50% per extra line.
+- Achievement system (v5, zombietoss pattern): 20 achievements {id,name,desc,icon,rarity,cond}
+  polled after game events, unlocked state + lifetime stats persisted in localStorage
+  (zms_meta, survives new runs), trophy toast on unlock, and a viewable list screen with
+  locked/unlocked states on the title and game-over screens.
+- Weather system (v5, zombietoss-inspired, CSS-only): each wave rolls clear/rain/snow/fog/
+  storm. Ambient visuals over the battlefield (animated rain streaks, drifting snow,
+  parallax fog bands, storm lightning flashes with delayed thunder) plus light gameplay
+  flavor: rain heals +50% on nature matches, snow extends ice slows +50%, fog slows the
+  horde's march 10%, storm boosts bolt matches +50%. Weather persists in the save.
 
 ## Reused from zombietoss (TheArchitectit/zombietoss)
 - Zombie type system: regular / runner / armored / brute with hp, speed, armor,
@@ -43,9 +56,13 @@ external requests), built from mechanics mined from TheArchitectit/zombietoss:
 - OUT: sound assets, multiplayer, accounts, PR/merge to main. itch.io packaging comes later (title is itch-bound).
 
 ## Verification
-Committed gate: node --test tests/game.test.js (8/8) - runnable from a fresh clone
+Committed gate: node --test tests/game.test.js (12/12) - runnable from a fresh clone
 via npm test. Live mobile playtest in the cloud browser (390x844 iPhone viewport):
 real tap simulation on class select, shop, and ability buttons; valid swap sticks;
 invalid swap snaps back; match triggers hero attack animation + projectile; level-up
 unlocks abilities; reload restores save incl. hero/score; service-worker update flow
 (cache-name bump + auto-reload on controllerchange) moves v1 users to the new build.
+v5 adds: forced 4-in-a-row and multi-line swaps show banners + score bonuses, an
+achievement unlocks live and persists across reload, weather rolls are visible and
+each condition renders; gates extended to 12 tests covering v5 systems presence,
+achievement-def integrity, and weather/gameplay coupling.

@@ -12,3 +12,6 @@
 | localStorage unavailable (private mode) | Low | All saves wrapped in try/catch; game still runs | Closed |
 | Save corruption | Low | JSON parse guarded; falls back to new game | Closed |
 | File-size soft gate (inline JS) | Low | Single-file constraint is the requirement | Accepted |
+
+| Weather animation burns phone battery/CPU | Med | CSS-only keyframe layers (no per-frame JS), single interval for storm flash, animations only mounted for non-clear weather | Closed |
+| Achievement conditions fire from stale state | Low | conditions are pure predicates re-polled after every game event; unlocks persist immediately | Closed |

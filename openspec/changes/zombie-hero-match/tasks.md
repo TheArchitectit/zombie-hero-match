@@ -23,3 +23,7 @@
 21. [x] v4 classes: Ranger, Cleric, Necromancer with distinct visuals + kits (5 total)
 22. [x] v4 bosses: every 10th wave spawns a scaled boss; campaign unbounded past 100 waves
 23. [x] Gates green at v4 head: 9/9 incl. v4 presence checks; fresh-clone npm test verified
+24. [x] v5 combos: 4/5+-in-a-row detection + banners + score bonuses; multi-line simultaneous matches multiply damage +50%/extra line; combo jingle
+25. [x] v5 achievements: 20 defs, lifetime stats + unlock map in zms_meta, unlock toasts, list screen (locked/unlocked) on title + game over
+26. [x] v5 weather: per-wave roll (clear/rain/snow/fog/storm), CSS-only ambient layers, storm lightning + delayed thunder, gameplay flavor per condition, weather in save
+27. [x] v5 gates: tests extended to 12/12 (v5 presence, achievement-def integrity, weather coupling, weather in save schema); fresh-clone npm test verified
