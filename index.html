@@ -759,6 +759,11 @@ if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
     navigator.serviceWorker.register('sw.js').catch(function(){});
   });
+  // a new service worker taking control means fresh assets - reload once onto them
+  var zhmswReloaded=false;
+  navigator.serviceWorker.addEventListener('controllerchange', function() {
+    if (zhmswReloaded) return; zhmswReloaded=true; location.reload();
+  });
 }
 </script>
 </body>
