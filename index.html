@@ -193,6 +193,7 @@ function updateHeroHud(){
  $('ulvl').textContent=S.heroLvl;
  $('xpfill').style.width=clamp(100*S.heroXP/xpNeed(S.heroLvl),0,100)+'%';
  $('uhero').textContent=heroDef().emoji;
+ const h=$('hero');if(h)h.textContent=heroDef().emoji;
 }
 function renderAbilityBtn(){
  const b=$('abBtn');const ab=S?activeAbility():null;
