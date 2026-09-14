@@ -1,5 +1,35 @@
 # Handoff: zombie-hero-match
 
+## Gate results (2026-09-14, v6 head)
+- node --test tests/game.test.js: 16/16 pass (v5 suite plus: v6 systems presence,
+  depth-layer structure - 3 rain + 3 snow layers across back/fore canvases, gore
+  wiring + pool caps, functional rollWeather test: no repeats over 400 rolls, all
+  five conditions covered, boss-wave storm rate > 22%). Fresh-clone npm test
+  verified green on the exact pushed tree; a Node DOM-stub smoke harness ran
+  newGame, all five weather engines, bolt firing, real-swap kills (blood/chunks/
+  splats produced), and 200 clean rolls.
+
+## Live playtest (v6, cloud Chrome, 390x844 iPhone viewport)
+- Pages serves zhm-v6 (sw.js and the installed cache both confirmed zhm-v6).
+- Rain: 3 depth layers visible (fine faint far drops, thick bright near streaks),
+  splash rings along the ground, gust slant. Storm: heavy rain + jagged foreground
+  lightning bolt captured live; First Blood achievement toast fired from a real kill.
+- Gore: real kills produced blood=43/chunks=7/splats=2 in state; a boss-scale burst
+  (40 droplets, 8 chunks, wide splat) screenshotted mid-field; splatter decals
+  persist after the burst fades.
+- Snow: layered flakes with depth; ground accumulation grows (slowly in headless
+  Chrome - rAF throttled; full rate on a visible phone screen).
+- Fog: 3 parallax banks + foreground drift band render; horde-march 10% slow is
+  the v5 coupling, unchanged.
+- Weather persists in zms_save; reload + Continue restored the fog wave and
+  reseeded the engine.
+
+## Not verified (v6)
+- Real-device feel, audio, and frame rate on Roger's iPhone - synthetic viewport
+  only. Headless Chrome throttles rAF when unfocused, so phone-rate weather
+  density/accumulation is structural (capped arrays, batched strokes), not measured.
+- Fog HUD glyph shows as a box in headless Chrome's font set; iOS has the glyph.
+
 ## Gate results (2026-09-13, v5 head)
 - node --test tests/game.test.js: 12/12 pass (offline self-containment, mobile
   shell, per-block JS parse, systems presence, v2 + v4 + v5 systems presence,
