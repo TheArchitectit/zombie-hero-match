@@ -157,3 +157,10 @@ Verified at head `a1dab6c` (Pages last-modified 02:07:59 GMT, byte-identical to 
 - Fidelity of zombie stat profiles "ported from zombietoss" (zombietoss repo not read).
 - Real-device touch feel, iOS WebAudio unlock, airplane-mode play, landscape/other viewports.
 - Balance past early waves (v1 design's own open question, still open).
+
+## Addendum (21:12 CT)
+
+While this document was being committed, `18eac1b` ("v2.1: field hero sprite now switches to the class
+emoji") landed - a 2-line change (hero emoji set from `heroDef().emoji` on game start/continue, mirrored to
+index.html). Diff reviewed: it does not alter any finding above, and adds one more unspecced v2-era change
+(reinforces F2). Branch head at commit time of this audit doc: `e5c37bd`.
