@@ -44,9 +44,11 @@ armored, 60 brute) and from wave clears (25 + 15 x wave), SHALL level up at
 Level-ups SHALL announce themselves (glow + toast).
 
 ### R8: Ability unlocks
-Level 2 SHALL unlock a class passive (Soldier: Crit Burst - +15% crit chance,
-crits deal 4x; Mage: Chain Nova - matches arc 50% damage to a second zombie).
-Level 4 SHALL unlock a class active on a circular on-field button with a
-cooldown readout (Soldier: Shockwave, 18s - damage plus knockback to every
-zombie; Mage: Deep Freeze, 22s - every zombie frozen still for 4s). The button
-SHALL appear only once unlocked and only during play.
+Level 2 SHALL unlock a class passive; level 4 SHALL unlock a class active on
+a circular on-field button with a cooldown readout, shown only once unlocked
+and only during play. Soldier: Crit Burst (+15% crit, 4x) / Shockwave (18s,
+damage + knockback to all). Mage: Chain Nova (50% arc) / Deep Freeze (22s,
+4s full stop). Ranger: Volley (40% to a random zombie) / Arrow Storm (20s,
+5 heavy arrows at random zombies). Cleric: Blessing (matches heal the wall)
+/ Smite (25s, front 3 hit hard + wall heal 15). Necromancer: Soul Harvest
+(+50% XP from kills) / Death Wave (24s, damages all, scales with kill count).

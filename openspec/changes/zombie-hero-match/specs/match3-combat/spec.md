@@ -21,9 +21,10 @@ applied ONLY to zombies in the target's lane, nature barricade heal, bolt chain
 damage to 2 additional zombies, arcane armor-piercing (+50% vs brute).
 
 ### R4: Class modifiers
-Soldier SHALL apply +30% damage and 2.2x fire; Mage SHALL splash 60% of match
-damage to all zombies in the target's lane. Class perks SHALL scale via the
-perk upgrade track.
+The game SHALL offer 5 classes. Soldier: +30% damage, 2.2x fire. Mage: 60% of
+match damage splashes to all zombies in the target's lane. Ranger: +15%
+damage. Cleric: +10% damage, nature matches heal double. Necromancer: +20%
+damage, 1.3x arcane. Class perks SHALL scale via the perk upgrade track.
 
 ### R5: No-move recovery
 When no legal swap exists after resolution, the grid SHALL shuffle until at
@@ -41,6 +42,7 @@ under the finger.
 ### R7: Hero-delivered attacks
 Every match attack SHALL be delivered by the hero character standing left of
 the field: the hero plays a swing/lunge animation and fires a class-flavored
-projectile (Soldier: fast tracer; Mage: slower glowing orb) that impacts the
-target with a flash. Chain Nova SHALL show a lightning arc from the first
-target to the second.
+projectile (Soldier: fast tracer; Mage: glowing orb; Ranger: arrow; Cleric: sparkle;
+Necromancer: skull) that impacts the target with a flash. Chain Nova SHALL
+show a lightning arc from the first target to the second; Volley SHALL fire
+a second arrow at a random zombie.

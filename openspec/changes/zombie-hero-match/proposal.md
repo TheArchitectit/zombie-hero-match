@@ -14,11 +14,14 @@ external requests), built from mechanics mined from TheArchitectit/zombietoss:
 
 - 7x7 touch-first match-3 grid (tap-tap or swipe), 5 tile colors with distinct effects.
 - 5 lanes of zombies marching on the player's barricade; matches attack the horde.
-- 2 playable classes (Soldier: focused fire/crits; Mage: lane splash/lane slows).
+- 5 playable classes (Soldier: focused fire/crits; Mage: lane splash/lane slows;
+  Ranger: fast hits/volleys; Cleric: healing/smite; Necromancer: soul-fueled bursts).
 - A hero character standing left of the field who delivers every match attack with
   class-flavored projectile visuals (soldier tracer, mage orb, chain-nova arc).
 - Hero XP from kills and wave clears; level-ups unlock abilities (Lv2 passive,
   Lv4 active with an on-field cooldown button).
+- 100+ wave campaign (unbounded counter): every 10th wave is a boss wave with a
+  visibly distinct, heavily scaled boss zombie.
 - Wave loop with between-wave upgrade shop (damage, wall, gold, class perk).
 - HP/damage economy, game over + restart with meta-progression kept.
 - localStorage save (class, wave, gold, score, kills, upgrades, HP, hero level/XP)

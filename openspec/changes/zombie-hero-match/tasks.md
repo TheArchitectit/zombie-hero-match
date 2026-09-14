@@ -20,3 +20,6 @@
 18. [x] v2 offline update flow: sw cache zhm-v2/v3 bumps, old-cache cleanup, controllerchange auto-reload
 19. [x] v2 audit remediation: ice lane-slow code fix, score/kills persistence, reproducible gate (npm test from fresh clone), package.json name
 20. [x] Gates green at pushed head: node --test tests/game.test.js 8/8
+21. [x] v4 classes: Ranger, Cleric, Necromancer with distinct visuals + kits (5 total)
+22. [x] v4 bosses: every 10th wave spawns a scaled boss; campaign unbounded past 100 waves
+23. [x] Gates green at v4 head: 9/9 incl. v4 presence checks; fresh-clone npm test verified

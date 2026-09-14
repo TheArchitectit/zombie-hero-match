@@ -10,6 +10,7 @@
 | match3 R6 | bindTap, grid touch handlers, renderTile dataset sync | live: synthetic-touch taps on class/shop/ability buttons and tiles |
 | match3 R7 | heroAtkAnim, spawnProj, impact | live: hero swing + projectiles observed after swaps |
 | waves R1-R3 | ZTYPES, loop(), spawnWeights, frozenT | live: march, HP bars; frozen brutes held still 4s |
+| waves R4 | boss ZTYPE, bossPending, startWave boss branch | harness: wave 10 + 100 queue boss, wave 11 does not; boss hp >400 |
 | meta R1/R2 | saveGame/loadSave/applySave, Continue | live: reload -> Continue restores wave/gold/heroLvl/heroXP/score |
 | meta R3 | renderUpgrades | live: touch buy deducted gold, dmg level rose |
 | meta R4 | gameOver/btnRestart | playtest: restart keeps progress at wave 1 |

@@ -43,6 +43,12 @@ test('v2 systems present: touch fix, snap-back, hero, levels, abilities', () => 
   }
 });
 
+test('v4 systems present: 5 classes, boss waves, new abilities', () => {
+  for (const needle of ['ranger', 'cleric', 'necro', 'volley', 'blessing', 'soulharvest', 'arrowstorm', 'smite', 'deathwave', 'boss', 'bossPending', 'btnRanger', 'btnCleric', 'btnNecro', 'BOSS WAVE']) {
+    assert.ok(html.includes(needle), 'missing: ' + needle);
+  }
+});
+
 test('index.html mirrors the game file', () => {
   const idx = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
   assert.equal(idx, html);

@@ -31,6 +31,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:
 .zombie.slow .zem{filter:drop-shadow(0 0 6px #6cf)}
 .zombie.armored .zem{filter:drop-shadow(0 0 4px #aaa)}
 .zombie.brute .zem{filter:drop-shadow(0 0 8px #b6f)}
+.zombie.boss .zem{filter:drop-shadow(0 0 14px #f33)}
+.zombie.boss .zhp{height:8px}
 .zombie.dying{transition:opacity .35s,transform .35s;opacity:0}
 /* Hero */
 #hero{position:absolute;left:14px;top:50%;margin-top:-24px;font-size:42px;line-height:1;z-index:6;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.75));animation:bob 2.2s ease-in-out infinite}
@@ -54,7 +56,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:
 .tile.noswap{animation:nosw .24s}
 @keyframes nosw{0%,100%{filter:none}50%{filter:brightness(1.9) saturate(.2)}}
 /* overlays */
-.overlay{position:fixed;inset:0;background:rgba(5,5,15,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:18px;text-align:center}
+.overlay{position:fixed;inset:0;background:rgba(5,5,15,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:18px;text-align:center;overflow-y:auto}
 .overlay h1{font-size:26px;color:#8f8;text-shadow:0 0 12px #4a4;margin-bottom:8px;letter-spacing:2px}
 .overlay h2{font-size:20px;color:#f88;margin-bottom:8px}
 .overlay p{color:#aab;font-size:13px;line-height:1.5;max-width:340px;margin-bottom:14px}
@@ -93,9 +95,12 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:
 
 <div class="overlay" id="ovTitle">
   <h1>RJL'S ZOMBIE<br>HERO MATCH</h1>
-  <p>Your hero holds the barricade on the left - every match you make powers their attacks. Kills and waves earn XP: level up to unlock abilities. Survive, spend gold, get stronger.</p>
+  <p>Your hero holds the barricade on the left - every match powers their attacks. 5 classes, 100+ waves, a boss every 10th. Kills and waves earn XP: level up to unlock abilities.</p>
   <button class="btn classbtn" id="btnSoldier">&#128737; SOLDIER<small>+30% all damage, fire hits 2.2x. Lv2: Crit Burst. Lv4: Shockwave slam (tap button).</small></button>
   <button class="btn classbtn" id="btnMage">&#129497; MAGE<small>Every match splashes the lane. Lv2: Chain Nova. Lv4: Deep Freeze (tap button).</small></button>
+  <button class="btn classbtn" id="btnRanger">&#129693; RANGER<small>+15% damage, fast tracer hits. Lv2: Volley. Lv4: Arrow Storm (tap button).</small></button>
+  <button class="btn classbtn" id="btnCleric">&#128519; CLERIC<small>+10% damage, nature heals 2x. Lv2: Blessing. Lv4: Smite (tap button).</small></button>
+  <button class="btn classbtn" id="btnNecro">&#129499; NECRO<small>+20% damage, arcane 1.3x. Lv2: Soul Harvest. Lv4: Death Wave (tap button).</small></button>
   <button class="btn alt" id="btnContinue" style="display:none">CONTINUE</button>
   <div id="titleBoard"></div>
 </div>
@@ -149,7 +154,8 @@ const ZTYPES={
  regular:{emoji:'\u{1F9DF}',hp:30,spd:1.0,gold:5,dps:4,armor:0,size:36},
  runner: {emoji:'\u{1F9DF}',hp:20,spd:1.9,gold:8,dps:3,armor:0,size:28},
  armored:{emoji:'\u{1F9DF}',hp:55,spd:0.8,gold:12,dps:6,armor:.35,size:40,cls:'armored'},
- brute:  {emoji:'\u{1F9DF}',hp:170,spd:.55,gold:40,dps:14,armor:.2,size:54,cls:'brute'}
+ brute:  {emoji:'\u{1F9DF}',hp:170,spd:.55,gold:40,dps:14,armor:.2,size:54,cls:'brute'},
+ boss:   {emoji:'\u{1F9DF}',hp:420,spd:.42,gold:150,dps:25,armor:.15,size:74,cls:'boss'}
 };
 function spawnWeights(w){
  return {regular:Math.max(50,100-w*10),armored:Math.min(40,w*5),runner:Math.min(30,w*3),brute:w>=5?Math.min(20,(w-4)*4):0};
@@ -162,9 +168,18 @@ const HEROES={
   {lvl:4,id:'shockwave',name:'Shockwave',cd:18,emoji:'\u{1F4A5}',desc:'Slam: heavy damage + knockback to every zombie'}]},
  mage:{emoji:'\u{1F9D9}',proj:'\u{2728}',projDur:210,abil:[
   {lvl:2,id:'chainnova',name:'Chain Nova',passive:true,desc:'Matches arc to a 2nd zombie for 50%'},
-  {lvl:4,id:'freezeall',name:'Deep Freeze',cd:22,emoji:'\u{2744}\u{FE0F}',desc:'Freeze every zombie for 4s'}]}
+  {lvl:4,id:'freezeall',name:'Deep Freeze',cd:22,emoji:'\u{2744}\u{FE0F}',desc:'Freeze every zombie for 4s'}]},
+ ranger:{emoji:'\u{1F9DD}',proj:'\u{27B9}',projDur:120,abil:[
+  {lvl:2,id:'volley',name:'Volley',passive:true,desc:'Every match also hits a random zombie for 40%'},
+  {lvl:4,id:'arrowstorm',name:'Arrow Storm',cd:20,emoji:'\u{1F3F9}',desc:'5 arrows strike random zombies for heavy damage'}]},
+ cleric:{emoji:'\u{1F607}',proj:'\u{1F4AB}',projDur:180,abil:[
+  {lvl:2,id:'blessing',name:'Blessing',passive:true,desc:'Every match heals the barricade'},
+  {lvl:4,id:'smite',name:'Smite',cd:25,emoji:'\u{2728}',desc:'Holy blast: heavy damage to the front 3, wall healed'}]},
+ necro:{emoji:'\u{1F9DB}',proj:'\u{2620}\u{FE0F}',projDur:190,abil:[
+  {lvl:2,id:'soulharvest',name:'Soul Harvest',passive:true,desc:'Kills grant +50% XP'},
+  {lvl:4,id:'deathwave',name:'Death Wave',cd:24,emoji:'\u{1F480}',desc:'Damage every zombie, grows with your kill count'}]}
 };
-const XPVAL={regular:10,runner:14,armored:20,brute:60};
+const XPVAL={regular:10,runner:14,armored:20,brute:60,boss:200};
 function heroDef(){return HEROES[S.classId]||HEROES.soldier}
 function xpNeed(l){return 50+40*l}
 function heroUnlocked(){return heroDef().abil.filter(a=>S.heroLvl>=a.lvl)}
@@ -213,7 +228,7 @@ function castAbility(){
  heroAtkAnim();
  if(ab.id==='shockwave'){
   sfx.kill();ns(.25,.12);
-  shockwaveVisual();
+  ringVisual('#ffd24a');
   S.zombies.forEach(z=>{
    if(!z.alive)return;
    dealDamage(z,30+15*S.heroLvl,'fire',false);
@@ -223,6 +238,27 @@ function castAbility(){
   sfx.cascade();
   freezeVisual();
   S.zombies.forEach(z=>{if(z.alive){z.frozenT=4;updateZombieEl(z)}});
+ }else if(ab.id==='arrowstorm'){
+  sfx.cascade();
+  for(let i=0;i<5;i++){
+   setTimeout(()=>{
+    if(!S||S.over)return;
+    const alive=S.zombies.filter(z=>z.alive);if(!alive.length)return;
+    const t=alive[Math.floor(rand(0,alive.length))];
+    spawnProj(heroPos(),zPos(t),'\u{27B9}',110);
+    dealDamage(t,40+10*S.heroLvl,'bolt',false);
+   },i*90);
+  }
+ }else if(ab.id==='smite'){
+  sfx.wave();
+  ringVisual('#ffffff');
+  S.zombies.filter(z=>z.alive).sort((a,b)=>b.x-a.x).slice(0,3).forEach(z=>dealDamage(z,50+20*S.heroLvl,'arcane',false));
+  healBarricade(15);
+ }else if(ab.id==='deathwave'){
+  sfx.kill();ns(.3,.1);
+  ringVisual('#b96fff');
+  const dw=Math.min(250,20+3*S.kills);
+  S.zombies.forEach(z=>{if(z.alive)dealDamage(z,dw,'arcane',false)});
  }
  updateAbilityBtn();saveGame();
 }
@@ -235,7 +271,7 @@ function freshState(classId){
   maxHp:100,hp:100,heroLvl:1,heroXP:0,abCD:0,
   up:{dmg:0,vit:0,greed:0,perk:0},
   grid:[],zombies:[],zid:0,busy:false,sel:null,chain:0,
-  spawnQueue:0,spawnT:0,spawnInt:2.2,time:0,over:false};
+  spawnQueue:0,spawnT:0,spawnInt:2.2,time:0,over:false,bossPending:false};
 }
 function saveGame(){
  if(!S)return;
@@ -433,7 +469,7 @@ gridEl.addEventListener('pointercancel',()=>{touchStart=null});
 function clearSel(){if(S&&S.sel){const t=S.grid[S.sel.r][S.sel.c];if(t&&t.el)t.el.classList.remove('sel')}if(S)S.sel=null}
 
 // ---------- COMBAT ----------
-function classDmgMult(){let m=1;if(S.classId==='soldier')m*=1.3;return m}
+function classDmgMult(){let m=1;if(S.classId==='soldier')m*=1.3;if(S.classId==='ranger')m*=1.15;if(S.classId==='cleric')m*=1.1;if(S.classId==='necro')m*=1.2;return m}
 function heroPos(){const f=$('field');return{x:32,y:f.clientHeight/2}}
 function zPos(z){const f=$('field');const fw=f.clientWidth-40;return{x:10+z.x*fw+(z.size||36)/2,y:z.lane*LH+LH/2}}
 function heroAtkAnim(){
@@ -453,10 +489,10 @@ function impact(to){
  const f=$('field');const el=document.createElement('div');el.className='boom';el.textContent='\u{1F4A5}';
  el.style.left=(to.x-13)+'px';el.style.top=(to.y-13)+'px';f.appendChild(el);setTimeout(()=>el.remove(),300);
 }
-function shockwaveVisual(){
+function ringVisual(color){
  const f=$('field');const p=heroPos();
  const el=document.createElement('div');
- el.style.cssText='position:absolute;left:'+(p.x-10)+'px;top:'+(p.y-10)+'px;width:20px;height:20px;border:4px solid #ffd24a;border-radius:50%;z-index:9;pointer-events:none';
+ el.style.cssText='position:absolute;left:'+(p.x-10)+'px;top:'+(p.y-10)+'px;width:20px;height:20px;border:4px solid '+color+';border-radius:50%;z-index:9;pointer-events:none';
  f.appendChild(el);
  let done=false;const fin=()=>{if(done)return;done=true;el.remove()};
  if(el.animate){try{el.animate([{transform:'scale(1)',opacity:1},{transform:'scale(14)',opacity:0}],{duration:450,easing:'ease-out'}).onfinish=fin;setTimeout(fin,700);return}catch(e){}}
@@ -480,6 +516,7 @@ function attack(groups,chain){
   const target=zs.reduce((a,b)=>!a||b.x>a.x?b:a,null);
   if(!target)return;
   if(cn==='fire')dmg*=S.classId==='soldier'?2.2:1.6;
+  if(cn==='arcane'&&S.classId==='necro')dmg*=1.3;
   // the hero delivers the hit: swing + projectile from hero to target
   heroAtkAnim();
   spawnProj(heroPos(),zPos(target),hd.proj,hd.projDur);
@@ -489,7 +526,7 @@ function attack(groups,chain){
   if(S.classId==='soldier'&&critCh>0&&Math.random()<critCh){dmg*=hasPassive('critburst')?4:3;crit=true}
   dealDamage(target,dmg,cn,crit);
   if(cn==='ice'){const dur=S.classId==='mage'?3+S.up.perk:2;zs.filter(z=>z.lane===target.lane).forEach(z=>z.slowT=Math.max(z.slowT,dur))}
-  if(cn==='nature')healBarricade(size*2);
+  if(cn==='nature')healBarricade(size*2*(S.classId==='cleric'?2:1));
   if(cn==='bolt'){const others=zs.filter(z=>z!==target).sort((a,b)=>b.x-a.x).slice(0,2);others.forEach(z=>dealDamage(z,dmg*0.5,cn,false))}
   if(S.classId==='mage'){
    const spl=0.6+0.1*S.up.perk;
@@ -499,6 +536,11 @@ function attack(groups,chain){
    const nxt=zs.filter(z=>z!==target&&z.alive).sort((a,b)=>b.x-a.x)[0];
    if(nxt){spawnProj(zPos(target),zPos(nxt),'\u{26A1}',140);dealDamage(nxt,dmg*0.5,'arcane',false)}
   }
+  if(hasPassive('volley')){
+   const oth=zs.filter(z=>z!==target&&z.alive);
+   if(oth.length){const v=oth[Math.floor(rand(0,oth.length))];spawnProj(heroPos(),zPos(v),'\u{27B9}',120);dealDamage(v,dmg*0.4,'bolt',false)}
+  }
+  if(hasPassive('blessing'))healBarricade(size);
  });
 }
 function dealDamage(z,dmg,cn,crit){
@@ -514,7 +556,7 @@ function dealDamage(z,dmg,cn,crit){
 }
 let lastHitSfx=0;
 function sfxQuiet(){const n=performance.now();if(n-lastHitSfx>120){lastHitSfx=n;tn(300,.05,'square',.04)}}
-const ZPOINTS={regular:100,runner:150,armored:200,brute:1000};
+const ZPOINTS={regular:100,runner:150,armored:200,brute:1000,boss:5000};
 function killZombie(z){
  z.alive=false;
  S.score+=ZPOINTS[z.type]||100;S.kills++;
@@ -524,7 +566,7 @@ function killZombie(z){
  floatText(z,'+'+g+'\u{1F4B0}','#ffd24a');
  z.el.classList.add('dying');
  sfx.kill();
- gainXP(XPVAL[z.type]||10);
+ gainXP(Math.round((XPVAL[z.type]||10)*(hasPassive('soulharvest')?1.5:1)));
  setTimeout(()=>{if(z.el)z.el.remove()},380);
  setTimeout(saveGame,0);
 }
@@ -580,7 +622,10 @@ function loop(t){
  // spawning
  if(S.spawnQueue>0){
   S.spawnT-=dt;
-  if(S.spawnT<=0){spawnZombie();S.spawnQueue--;S.spawnT=S.spawnInt*rand(0.7,1.3)}
+  if(S.spawnT<=0){
+   if(S.bossPending){spawnZombie('boss');S.bossPending=false}else{spawnZombie()}
+   S.spawnQueue--;S.spawnT=S.spawnInt*rand(0.7,1.3);
+  }
  }
  // move
  let reached=false;
@@ -614,13 +659,15 @@ requestAnimationFrame(loop);
 // ---------- WAVES ----------
 function startWave(n){
  S.wave=n;S.over=false;
- S.spawnQueue=4+2*n+ (n%5===0?2:0);
+ const isBoss=n%10===0;
+ S.spawnQueue=isBoss?Math.max(3,Math.ceil((4+2*n)/2)):4+2*n+(n%5===0?2:0);
+ S.bossPending=isBoss;
  S.spawnInt=Math.max(0.7,2.1-0.1*n);
  S.spawnT=0.5;
  S.hp=clamp(S.hp,1,S.maxHp);
  S.screen='game';
  $('ovUpgrade').style.display='none';$('ovOver').style.display='none';$('ovTitle').style.display='none';
- updateHud();updateHeroHud();renderAbilityBtn();sfx.wave();saveGame();
+ updateHud();updateHeroHud();renderAbilityBtn();sfx.wave();if(isBoss)toast('BOSS WAVE '+n+'!');saveGame();
 }
 function waveComplete(){
  if(S.over)return;
@@ -706,7 +753,7 @@ function lbHtml(n){
  if(!top.length)return '';
  let h='<div style="margin:10px auto;max-width:320px;text-align:left;font-size:13px;background:#15152a;border:2px solid #3a3a5a;border-radius:10px;padding:8px 12px"><b style="color:#ffd24a">LOCAL HEROES</b><br>';
  top.forEach((e,i)=>{
-  h+='<div style="display:flex;justify-content:space-between;gap:14px;padding:2px 0;white-space:nowrap"><span>'+(i+1)+'. '+e.name+' <span style="color:#889">('+(e.classId==='soldier'?'SOL':'MAG')+' W'+e.wave+')</span></span><b>'+e.score+'</b></div>';
+  h+='<div style="display:flex;justify-content:space-between;gap:14px;padding:2px 0;white-space:nowrap"><span>'+(i+1)+'. '+e.name+' <span style="color:#889">('+(e.classId||'?').slice(0,3).toUpperCase()+' W'+e.wave+')</span></span><b>'+e.score+'</b></div>';
  });
  return h+'</div>';
 }
@@ -726,6 +773,9 @@ function continueGame(d){
 }
 bindTap($('btnSoldier'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('soldier')});
 bindTap($('btnMage'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('mage')});
+bindTap($('btnRanger'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('ranger')});
+bindTap($('btnCleric'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('cleric')});
+bindTap($('btnNecro'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('necro')});
 bindTap($('btnContinue'),()=>{const d=loadSave();if(d)continueGame(d)});
 bindTap($('btnNext'),()=>startWave(S.wave+1));
 bindTap($('btnRestart'),()=>{
@@ -738,7 +788,7 @@ bindTap($('btnRestart'),()=>{
 (function(){
  ensureHero();
  const d=loadSave();
- if(d){const b=$('btnContinue');b.style.display='block';b.textContent='CONTINUE \u2014 WAVE '+d.wave+' ('+(d.classId==='soldier'?'Soldier':'Mage')+', Lv'+(d.heroLvl||1)+')'}
+ if(d){const b=$('btnContinue');b.style.display='block';const cn=(HEROES[d.classId]?d.classId:'soldier');b.textContent='CONTINUE \u2014 WAVE '+d.wave+' ('+cn.charAt(0).toUpperCase()+cn.slice(1)+', Lv'+(d.heroLvl||1)+')'}
  $('titleBoard').innerHTML=lbHtml(5);
 })();
 // periodic autosave
@@ -751,7 +801,7 @@ window.__ZT={get S(){return S},newGame:newGame,continueGame:continueGame,loadSav
  tileScreenPos:function(r,c){const g=$('grid').getBoundingClientRect();return{x:g.left+c*CS+CS/2,y:g.top+r*CS+CS/2}},
  findSwap:function(){for(let r=0;r<G;r++)for(let c=0;c<G;c++){if(c<G-1&&wouldMatch(r,c,r,c+1))return[{r:r,c:c},{r:r,c:c+1}];if(r<G-1&&wouldMatch(r,c,r+1,c))return[{r:r,c:c},{r:r+1,c:c}]}return null},
  findInvalidSwap:function(){for(let r=0;r<G;r++)for(let c=0;c<G;c++){if(c<G-1&&!wouldMatch(r,c,r,c+1))return[{r:r,c:c},{r:r,c:c+1}];if(r<G-1&&!wouldMatch(r,c,r+1,c))return[{r:r,c:c},{r:r+1,c:c}]}return null},
- doSwap:doSwap,spawnZombie:spawnZombie};
+ doSwap:doSwap,spawnZombie:spawnZombie,startWave:startWave,waveComplete:waveComplete};
 </script>
 
 <script>

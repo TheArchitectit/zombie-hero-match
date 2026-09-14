@@ -20,9 +20,12 @@
    nature = wall heal, bolt = chains to 2 more, arcane = ignores armor (+50% vs brute).
    Every match attack is delivered BY the hero: swing animation plus a class-flavored
    projectile (soldier tracer, mage orb; Chain Nova adds an arc to a 2nd zombie).
-5. Classes: Soldier +30% damage, crit perk. Mage 60% lane splash, longer slows,
-   splash perk. Class chosen at run start, persisted in save; the hero sprite
-   matches the class emoji.
+5. Classes (5): Soldier +30% dmg, 2.2x fire, crits. Mage 60% lane splash,
+   longer slows. Ranger +15% dmg, fastest projectile, volley passive. Cleric
+   +10% dmg, nature heals 2x, blessing/smite sustain. Necromancer +20% dmg,
+   1.3x arcane, soul harvest/death wave. Class chosen at run start from 5
+   buttons (overlay scrolls on small screens), persisted in save; the hero
+   sprite matches the class emoji.
 6. Hero progression: XP per kill (type-based: 10/14/20/60) plus 25+15*wave per
    wave clear; xpNeed = 50+40*level. Level 2 unlocks a passive (Soldier: Crit
    Burst +15% crit @4x; Mage: Chain Nova 50% arc to a 2nd zombie), level 4 an
@@ -31,6 +34,10 @@
    HUD shows hero level + XP bar; unlocks toast on level-up.
 7. Waves: zombie count 4+2n (+2 on every 5th), hp x(1+0.22(n-1)), speed cap x1.6,
    spawn interval floor 0.7s. Spawn weights ported from zombietoss difficulty curve.
+   The wave counter is unbounded - the campaign runs past 100. Every 10th wave
+   (10, 20, ..., 100, ...) is a BOSS WAVE: half the normal spawns plus one boss
+   (420 base hp before wave scaling, 0.15 armor, 74px, red glow, 150 gold,
+   200 XP, 5000 pts) with a 'BOSS WAVE n!' toast. The boss marches first.
 8. Meta: gold per kill (type-based, greed upgrade scales), wave-clear bonus,
    4 upgrade tracks with escalating costs. Game over keeps class/gold/score/kills/
    upgrades/hero level and resets to wave 1 (forgiving roguelite-lite).
