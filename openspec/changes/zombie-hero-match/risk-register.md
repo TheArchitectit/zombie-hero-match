@@ -15,3 +15,5 @@
 
 | Weather animation burns phone battery/CPU | Med | CSS-only keyframe layers (no per-frame JS), single interval for storm flash, animations only mounted for non-clear weather | Closed |
 | Achievement conditions fire from stale state | Low | conditions are pure predicates re-polled after every game event; unlocks persist immediately | Closed |
+| Canvas weather + gore burns frame rate on phones (v6 replaces CSS-only v5) | Med | Fixed-size particle arrays (~200 drops max), one batched stroke per depth layer, pooled gore with hard caps, single rAF tick, DPR capped at 2; live-verified in cloud Chrome mobile viewport | Closed |
+| Weather roll RNG streaks feel static (user asked if zombietoss rolls per level - it does not) | Low | Previous condition excluded from each wave's roll; boss waves court storms | Closed |

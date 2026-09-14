@@ -21,3 +21,5 @@
 | match3 R8 | comboReward, comboBanner, sfx.combo, attack comboMult | live: forced 4-in-a-row and multi-line swaps show banners, score bonuses, damage x1.5 |
 | meta R9 | ACH defs, META/zms_meta, checkAch/unlockAch, renderAch/ovAch | live: achievement unlocked mid-play, persisted across reload, list shows locked/unlocked; gate: achievement-def integrity test |
 | waves R5 | WEATHERS, rollWeather/applyWeather, weather CSS layers, storm flash interval, weather couplings in attack()/loop() | live: weather rolls visible per wave, storm flash + bolt boost observed; gate: weather coupling test |
+| waves R5 (v6) | rollWeather exclusion table + boss bias; weatherFrame engine; wback/wfore canvases; RAIN/SNOW/FOG_LAYERS; strikeBolt/skyFlash | live: all 5 conditions rendered with visible depth; gate: functional roll distribution + no-repeat + boss storm bias test |
+| waves R6 (v6) | spawnBlood/spawnGore/addSplat/redFlash; killZombie + dealDamage wiring; GRE pools | live: kills burst blood + chunks + splat; gate: gore wiring/caps test |

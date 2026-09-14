@@ -88,3 +88,62 @@ test('save schema round-trips required fields', () => {
   const parsed = JSON.parse(JSON.stringify(save));
   for (const k of ['classId', 'wave', 'gold', 'maxHp', 'hp', 'up', 'heroLvl', 'heroXP', 'weather']) assert.ok(k in parsed, 'save missing ' + k);
 });
+
+test('v6 systems present: 2.5D canvas weather + gore', () => {
+  for (const needle of ['wback', 'wfore', 'gorecv', 'weatherFrame', 'goreFrame', 'RAIN_LAYERS', 'SNOW_LAYERS', 'FOG_LAYERS', 'spawnBlood', 'spawnGore', 'addSplat', 'drawChunk', 'updGust', 'strikeBolt', 'drawBolt', 'skyFlash', 'snowCap', 'seedFx', 'sizeFx', 'redFlash', 'GORE_TYPES']) {
+    assert.ok(html.includes(needle), 'missing: ' + needle);
+  }
+});
+
+test('v6 weather has real depth: 3 parallax layers, near layer on the front canvas', () => {
+  // far+mid layers render behind the horde (back canvas), near layer in front (fore canvas)
+  assert.ok((html.match(/cv:'back'/g) || []).length >= 4, 'back-canvas layers');
+  assert.ok((html.match(/cv:'fore'/g) || []).length >= 2, 'fore-canvas layers');
+  const rain = html.match(/const RAIN_LAYERS=\[([\s\S]*?)\];/);
+  assert.ok(rain, 'RAIN_LAYERS found');
+  assert.equal((rain[1].match(/\{n:/g) || []).length, 3, 'rain has 3 depth layers');
+  const snow = html.match(/const SNOW_LAYERS=\[([\s\S]*?)\];/);
+  assert.equal((snow[1].match(/\{n:/g) || []).length, 3, 'snow has 3 depth layers');
+  // batched-stroke perf convention: rain drawn with one beginPath/stroke per layer
+  assert.match(html, /one batched stroke per depth layer/);
+});
+
+test('v6 gore is wired into kills with caps', () => {
+  const kz = html.match(/function killZombie\(z\)\{[\s\S]*?\n\}/);
+  assert.ok(kz, 'killZombie found');
+  assert.match(kz[0], /spawnBlood\(/);
+  assert.match(kz[0], /spawnGore\(/);
+  assert.match(kz[0], /addSplat\(/);
+  assert.match(html, /BLOOD_MAX=150/);
+  assert.match(html, /CHUNK_MAX=40/);
+  assert.match(html, /SPLAT_MAX=30/);
+  // crits and bosses escalate
+  assert.match(kz[0], /boss.*2\.2/);
+  assert.match(html, /z\._crit\?1\.5/);
+  // non-lethal crits still bleed a little
+  assert.match(html, /if\(crit\)\{const cp=zPos\(z\);spawnBlood\(cp\.x,cp\.y,7\)\}/);
+});
+
+test('v6 weather roll: per-wave, never repeats, boss waves court storms', () => {
+  const m = html.match(/function rollWeather\(\)\{[\s\S]*?\n\}/);
+  assert.ok(m, 'rollWeather found');
+  let S = { wave: 1, weather: 'clear' };
+  eval(m[0] + '\nglobalThis.__rw = rollWeather;');
+  const rollWeather = globalThis.__rw;
+  // never repeats the previous condition
+  for (let i = 0; i < 400; i++) {
+    const prev = S.weather, next = rollWeather();
+    assert.notEqual(next, prev, 'weather repeated: ' + next);
+    S.weather = next;
+  }
+  // covers all five conditions over enough rolls
+  const seen = new Set();
+  S = { wave: 3, weather: null };
+  for (let i = 0; i < 600; i++) { S.weather = rollWeather(); seen.add(S.weather); }
+  for (const w of ['clear', 'rain', 'snow', 'fog', 'storm']) assert.ok(seen.has(w), 'roll never produced ' + w);
+  // boss waves court storms: wave 10 storm rate clearly above the flat-wave 15%
+  let storms = 0;
+  S = { wave: 10, weather: null };
+  for (let i = 0; i < 2000; i++) if (rollWeather() === 'storm') storms++;
+  assert.ok(storms / 2000 > 0.22, 'boss-wave storm rate too low: ' + storms / 2000);
+});

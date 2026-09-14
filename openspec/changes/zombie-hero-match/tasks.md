@@ -27,3 +27,7 @@
 25. [x] v5 achievements: 20 defs, lifetime stats + unlock map in zms_meta, unlock toasts, list screen (locked/unlocked) on title + game over
 26. [x] v5 weather: per-wave roll (clear/rain/snow/fog/storm), CSS-only ambient layers, storm lightning + delayed thunder, gameplay flavor per condition, weather in save
 27. [x] v5 gates: tests extended to 12/12 (v5 presence, achievement-def integrity, weather coupling, weather in save schema); fresh-clone npm test verified
+28. [x] v6 weather 2.5D: canvas engine with near/far parallax layers (wback/wfore), batched-stroke rain + splashes + wind gusts, snow sway + accumulation, fog banks + foreground drift, storm bolt + sky flash + delayed thunder, clear-sky clouds/dust
+29. [x] v6 gore: blood bursts, tumbling chunks (flesh/bone/eyeball/teeth), fading splatter decals; boss/brute/crit scaling; pooled caps; boss red flash
+30. [x] v6 weather roll: previous condition excluded, boss waves court storms (30%); zombietoss weather-roll behavior documented (static light rain, debug-key only)
+31. [x] v6 gates: tests extended to 16/16 (v6 presence, depth-layer structure, gore wiring/caps, functional rollWeather distribution); fresh-clone npm test verified

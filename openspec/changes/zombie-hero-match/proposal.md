@@ -41,6 +41,21 @@ external requests), built from mechanics mined from TheArchitectit/zombietoss:
   parallax fog bands, storm lightning flashes with delayed thunder) plus light gameplay
   flavor: rain heals +50% on nature matches, snow extends ice slows +50%, fog slows the
   horde's march 10%, storm boosts bolt matches +50%. Weather persists in the save.
+- Weather v6 (2.5D rebuild): the CSS-only v5 layers are replaced by a canvas engine with
+  real depth - far/mid precipitation renders behind the horde (wback canvas), near
+  precipitation in front of it (wfore canvas). Rain runs 3 parallax drop layers (one
+  batched stroke each), ground splash rings, and wind-gust slant; snow runs 3 flake
+  layers with sway plus a slowly accumulating ground band; fog layers 3 parallax ground
+  banks plus a foreground drift band; storm adds a jagged foreground lightning bolt with
+  sky flash and delayed synthesized thunder; even clear skies get parallax cloud shadows
+  and dust motes. The roll is per wave, never repeats the previous condition, and boss
+  waves court storms (30%).
+- Gore v6 (ported from zombietoss entities/particles.js + entities/gore.js): every kill
+  bursts blood droplets and 3+ tumbling chunks (flesh, bone, eyeball, teeth) with
+  gravity, a floor bounce, spin, and fade; brute/boss/crit kills scale the burst; a
+  splatter decal is painted under each kill and fades over ~8 seconds. Boss kills add a
+  red screen flash. All gore is pooled/capped (150 blood, 40 chunks, 30 splats) and
+  renders on its own canvas above the horde.
 
 ## Reused from zombietoss (TheArchitectit/zombietoss)
 - Zombie type system: regular / runner / armored / brute with hp, speed, armor,

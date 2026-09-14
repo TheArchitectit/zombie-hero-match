@@ -65,13 +65,31 @@
     purchases. Lifetime stats + unlock map persist in localStorage zms_meta,
     independent of zms_save so new runs never wipe achievements. zombietoss has no
     list screen; ZHM adds one (ovAch) reachable from title and game over.
-16. Weather (v5, zombietoss-inspired but CSS-only - ZHM has no canvas): one #weather
-    overlay in the battlefield, two tiled gradient layers per condition animated by
-    keyframes (seamless: bg-position shifts equal the tile period), storm adds a
-    #wflash element driven by a 4-7s interval with delayed synth thunder. Gameplay
-    coupling is deliberately light: rain nature heal x1.5, snow ice slow x1.5,
-    fog horde march x0.9, storm bolt damage x1.5. Weather rolls per wave, persists
-    in zms_save, and costs no per-frame JS.
+16. Weather (v6 rebuild - Roger's v5 playtest: "Weather effects need more detail they
+    look 2d. Game needs 2.5 d"): three stacked canvases in #field - wback (z-index 2,
+    behind the horde) for far/mid layers and ground effects, gorecv (z-index 4, above
+    zombies) for gore, wfore (z-index 8, in front of the hero) for near layers. Rain,
+    snow, and fog each run 3 depth layers (small/slow/faint far, big/fast/bright near);
+    rain draws one batched stroke per layer (the zombietoss perf trick), lands drops as
+    expanding splash rings, and slants with a wind-gust state machine ported from
+    zombietoss updateWind; snow sways and accumulates a ground band; fog ports the
+    zombietoss parallax ellipse banks and adds a foreground drift band; storm layers a
+    jagged foreground bolt (two-pass stroke: glow + core) over the sky flash with
+    thunder delayed 200-800ms (zombietoss triggerLightning pattern). Clear skies still
+    read depth via parallax cloud shadows and dust motes. The roll: zombietoss does NOT
+    roll weather per level (game.js line 244 sets setRainIntensity(1) once at start;
+    only debug keys 1-4 change it) - ZHM already rolled per wave, and v6 widens that
+    gap: the previous condition is excluded from the table and boss waves court storms
+    (30%). Gameplay couplings from v5 are unchanged. One weatherFrame(dt) per rAF tick,
+    fixed-size particle arrays, no per-frame DOM writes - phone-safe.
+17. Gore (v6, zombietoss port): kills call spawnBlood (hsl-red droplets, gravity, fast
+    fade - direct port of spawnBlood) plus spawnGore (tumbling flesh/bone/eyeball/teeth
+    chunks with gravity, one floor bounce, spin, fade - port of entities/gore.js
+    updateGore physics, zombietoss's comedic chicken/pie types swapped for zombie-appropriate
+    chunks) plus addSplat (a 3-ellipse decal under the kill that fades over ~8s).
+    Scale: regular 18 blood/3 chunks, brute 26/5, boss 40/8 plus a red screen flash;
+    crit kills x1.5; non-lethal crits puff 7 droplets. Caps: 150 blood, 40 chunks, 30
+    splats (oldest dropped). All drawing on gorecv, cleared and redrawn per frame.
 
 ## Open questions
 - Balance past wave ~8 is untested by hand (HP scaling vs upgrade curve) - tuned
