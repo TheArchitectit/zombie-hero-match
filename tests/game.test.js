@@ -48,9 +48,10 @@ test('index.html mirrors the game file', () => {
   assert.equal(idx, html);
 });
 
-test('service worker cache bumped off v1', () => {
-  assert.match(sw, /zhm-v2/);
-  assert.equal(/zhm-v1/.test(sw), false, 'stale v1 cache name');
+test('service worker cache bumped to the current release', () => {
+  const m = sw.match(/zhm-v(\d+)/);
+  assert.ok(m, 'cache name found');
+  assert.ok(Number(m[1]) >= 3, 'cache bumped for this release (zhm-v3+)');
 });
 
 test('save schema round-trips required fields', () => {

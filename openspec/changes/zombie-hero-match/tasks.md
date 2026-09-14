@@ -10,7 +10,13 @@
 8. [x] Wave loop: spawn schedule, wave clear, upgrade shop, next wave
 9. [x] Meta: upgrades, gold economy, game over/restart with carry-over
 10. [x] Persistence: localStorage save + Continue on boot, autosave
-11. [x] DevGate: guardrails-scan clean, run-tests 5/5, regression_check green (1 soft file-size warning documented)
-12. [x] Headless mobile playtest at 390x844 (swap, kills, upgrades, game over, reload resume)
-13. [x] Leaderboard: local scores (zhm_scores), score = kill points + wave bonuses, rank on game over, top-5 on title
-14. [x] Repo: public zombie-hero-match, README main, feature branch with openspec + game
+11. [x] Leaderboard: local scores (zhm_scores), score = kill points + wave bonuses, rank on game over, top-5 on title
+12. [x] Repo: public zombie-hero-match, README main, feature branch with openspec + game
+13. [x] v2 touch fix: bindTap buttons (touchend+click, dedup), grid touch handlers, tile dataset re-sync
+14. [x] v2 swap validity: invalid swaps visibly snap back (flash + bad sfx); verified live
+15. [x] v2 hero: left-side sprite, attack swing + class-flavored projectiles on every match
+16. [x] v2 hero progression: XP/levels, Lv2 passive + Lv4 active abilities, HUD level/XP bar, cooldown button
+17. [x] v2 persistence: hero level/XP + score/kills in zms_save; Continue restores all
+18. [x] v2 offline update flow: sw cache zhm-v2/v3 bumps, old-cache cleanup, controllerchange auto-reload
+19. [x] v2 audit remediation: ice lane-slow code fix, score/kills persistence, reproducible gate (npm test from fresh clone), package.json name
+20. [x] Gates green at pushed head: node --test tests/game.test.js 8/8

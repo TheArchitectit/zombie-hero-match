@@ -239,14 +239,14 @@ function freshState(classId){
 }
 function saveGame(){
  if(!S)return;
- try{localStorage.setItem('zms_save',JSON.stringify({classId:S.classId,wave:S.wave,gold:S.gold,maxHp:S.maxHp,hp:S.hp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP}))}catch(e){}
+ try{localStorage.setItem('zms_save',JSON.stringify({classId:S.classId,wave:S.wave,gold:S.gold,score:S.score,kills:S.kills,maxHp:S.maxHp,hp:S.hp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP}))}catch(e){}
 }
 function loadSave(){
  try{const d=JSON.parse(localStorage.getItem('zms_save')||'null');return d&&d.classId?d:null}catch(e){return null}
 }
 function applySave(d){
  S=freshState(d.classId);S.wave=d.wave||1;S.gold=d.gold||0;S.maxHp=d.maxHp||100;S.hp=clamp(d.hp||S.maxHp,1,S.maxHp);S.up=Object.assign({dmg:0,vit:0,greed:0,perk:0},d.up);
- S.heroLvl=d.heroLvl||1;S.heroXP=d.heroXP||0;
+ S.heroLvl=d.heroLvl||1;S.heroXP=d.heroXP||0;S.score=d.score||0;S.kills=d.kills||0;
 }
 
 // ---------- LAYOUT ----------
@@ -488,7 +488,7 @@ function attack(groups,chain){
   if(hasPassive('critburst'))critCh+=0.15;
   if(S.classId==='soldier'&&critCh>0&&Math.random()<critCh){dmg*=hasPassive('critburst')?4:3;crit=true}
   dealDamage(target,dmg,cn,crit);
-  if(cn==='ice'){const dur=S.classId==='mage'?3+S.up.perk:2;zs.forEach(z=>z.slowT=Math.max(z.slowT,dur))}
+  if(cn==='ice'){const dur=S.classId==='mage'?3+S.up.perk:2;zs.filter(z=>z.lane===target.lane).forEach(z=>z.slowT=Math.max(z.slowT,dur))}
   if(cn==='nature')healBarricade(size*2);
   if(cn==='bolt'){const others=zs.filter(z=>z!==target).sort((a,b)=>b.x-a.x).slice(0,2);others.forEach(z=>dealDamage(z,dmg*0.5,cn,false))}
   if(S.classId==='mage'){
@@ -643,7 +643,7 @@ function gameOver(){
  $('abBtn').style.display='none';
  sfx.over();
  const rank=lbRecord();
- $('overInfo').innerHTML='You fell on wave '+S.wave+' with <b style="color:#ffd24a">'+S.score+'</b> pts ('+S.kills+' kills), hero Lv'+S.heroLvl+' - rank #'+rank+' locally. Your class, gold, upgrades and hero level carry over.'+lbHtml(10);
+ $('overInfo').innerHTML='You fell on wave '+S.wave+' with <b style="color:#ffd24a">'+S.score+'</b> pts ('+S.kills+' kills), hero Lv'+S.heroLvl+' - rank #'+rank+' locally. Class, gold, upgrades, hero level and score carry over.'+lbHtml(10);
  saveGame();
  $('ovOver').style.display='flex';
 }
@@ -730,7 +730,7 @@ bindTap($('btnContinue'),()=>{const d=loadSave();if(d)continueGame(d)});
 bindTap($('btnNext'),()=>startWave(S.wave+1));
 bindTap($('btnRestart'),()=>{
  // keep class/gold/upgrades/hero, back to wave 1
- const keep={classId:S.classId,wave:1,gold:S.gold,maxHp:S.maxHp,hp:S.maxHp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP};
+ const keep={classId:S.classId,wave:1,gold:S.gold,score:S.score,kills:S.kills,maxHp:S.maxHp,hp:S.maxHp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP};
  try{localStorage.setItem('zms_save',JSON.stringify(keep))}catch(e){}
  continueGame(keep);
 });
