@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>RJL's Zombie Hero Match</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:'Courier New',monospace;-webkit-user-select:none;user-select:none;touch-action:none;color:#fff}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;max-width:520px;margin:0 auto}
+/* HUD */
+#hud{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#12122a;border-bottom:2px solid #2a2a4a;font-size:14px}
+#hud .hpwrap{flex:1;max-width:150px}
+#hpbar{height:14px;background:#3a1020;border:2px solid #000;border-radius:7px;overflow:hidden}
+#hpfill{height:100%;background:linear-gradient(#ff6b6b,#c0392b);width:100%;transition:width .3s}
+#hud .stat{padding:0 6px;white-space:nowrap}
+#hud b{font-size:16px}
+/* Battlefield */
+#field{position:relative;background:linear-gradient(#141428,#0d0d1c);border-bottom:3px solid #2a2a4a;overflow:hidden}
+#barricade{position:absolute;left:0;top:0;bottom:0;width:10px;background:repeating-linear-gradient(45deg,#8a6a2a,#8a6a2a 6px,#6a4a1a 6px,#6a4a1a 12px);box-shadow:2px 0 8px rgba(0,0,0,.6);z-index:5}
+.lanebg{position:absolute;left:0;right:0;border-bottom:1px solid rgba(255,255,255,.05)}
+.zombie{position:absolute;left:0;top:0;will-change:transform;text-align:center;z-index:3;filter:drop-shadow(0 2px 3px rgba(0,0,0,.7))}
+.zombie .zem{display:block;line-height:1;transform:scaleX(-1)}
+.zombie .zhp{height:5px;background:#300;border-radius:3px;margin-top:2px;overflow:hidden;border:1px solid #000}
+.zombie .zhp i{display:block;height:100%;background:#4f4;transition:width .15s}
+.zombie.slow .zem{filter:drop-shadow(0 0 6px #6cf)}
+.zombie.armored .zem{filter:drop-shadow(0 0 4px #aaa)}
+.zombie.brute .zem{filter:drop-shadow(0 0 8px #b6f)}
+.zombie.dying{transition:opacity .35s,transform .35s;opacity:0}
+/* Grid */
+#gridwrap{flex:1;display:flex;align-items:center;justify-content:center;background:#0a0a14}
+#grid{position:relative;touch-action:none}
+.tile{position:absolute;display:flex;align-items:center;justify-content:center;border-radius:9px;border:2px solid rgba(0,0,0,.55);box-shadow:inset 0 -4px 0 rgba(0,0,0,.3),inset 0 3px 0 rgba(255,255,255,.15);transition:transform .18s ease,opacity .18s;cursor:pointer;will-change:transform}
+.tile.sel{outline:3px solid #fff;outline-offset:-3px;z-index:4}
+.tile.pop{opacity:0;transform:scale(.2)!important}
+/* overlays */
+.overlay{position:fixed;inset:0;background:rgba(5,5,15,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;padding:18px;text-align:center}
+.overlay h1{font-size:26px;color:#8f8;text-shadow:0 0 12px #4a4;margin-bottom:8px;letter-spacing:2px}
+.overlay h2{font-size:20px;color:#f88;margin-bottom:8px}
+.overlay p{color:#aab;font-size:13px;line-height:1.5;max-width:340px;margin-bottom:14px}
+.btn{display:block;width:280px;margin:8px auto;padding:14px;font-family:inherit;font-size:17px;font-weight:bold;color:#fff;background:#2a4a2a;border:3px solid #4a8a4a;border-radius:12px;cursor:pointer}
+.btn:active{transform:scale(.96)}
+.btn.alt{background:#3a3a5a;border-color:#6a6a9a}
+.btn:disabled{opacity:.4}
+.classbtn{width:300px;text-align:left;padding:12px 14px;font-size:15px}
+.classbtn small{display:block;font-weight:normal;color:#cbd;font-size:12px;margin-top:3px}
+.uprow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:400px}
+.upbtn{width:170px;padding:10px 8px;font-family:inherit;font-size:13px;color:#fff;background:#2a2a4a;border:2px solid #5a5a9a;border-radius:10px;cursor:pointer}
+.upbtn:active{transform:scale(.95)}
+.upbtn:disabled{opacity:.35}
+.upbtn b{display:block;font-size:14px;margin-bottom:2px}
+.upbtn .cost{color:#ffd24a}
+.float{position:absolute;font-weight:bold;font-size:16px;pointer-events:none;z-index:40;text-shadow:0 2px 3px #000;animation:fup .8s forwards}
+@keyframes fup{from{opacity:1;transform:translateY(0)}to{opacity:0;transform:translateY(-46px)}}
+#toast{position:fixed;left:50%;top:12px;transform:translateX(-50%);background:#222a;border:1px solid #557;padding:6px 14px;border-radius:10px;font-size:13px;z-index:60;opacity:0;transition:opacity .3s;pointer-events:none}
+.shake{animation:shk .3s}
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="hud">
+    <div class="hpwrap"><div id="hpbar"><div id="hpfill"></div></div></div>
+    <div class="stat">&#11088; <b id="uscore">0</b></div>
+    <div class="stat">&#128176; <b id="ugold">0</b></div>
+    <div class="stat">WAVE <b id="uwave">1</b></div>
+    <div class="stat" id="uclass">-</div>
+  </div>
+  <div id="field"></div>
+  <div id="gridwrap"><div id="grid"></div></div>
+</div>
+<div id="toast"></div>
+
+<div class="overlay" id="ovTitle">
+  <h1>RJL'S ZOMBIE<br>HERO MATCH</h1>
+  <p>Match tiles to attack the horde before it reaches your barricade. Each color hits different. Survive waves, spend gold, get stronger.</p>
+  <button class="btn classbtn" id="btnSoldier">&#128737; SOLDIER<small>Focused fire: +30% all damage. Fire tiles hit 2.2x. Perk: crit chance.</small></button>
+  <button class="btn classbtn" id="btnMage">&#129497; MAGE<small>Splash: every match also hits the whole lane for 60%. Ice slows 1s longer. Perk: bigger splash.</small></button>
+  <button class="btn alt" id="btnContinue" style="display:none">CONTINUE</button>
+  <div id="titleBoard"></div>
+</div>
+
+<div class="overlay" id="ovUpgrade" style="display:none">
+  <h1 style="color:#ffd24a;text-shadow:0 0 12px #a80">WAVE CLEARED</h1>
+  <p id="upInfo"></p>
+  <div class="uprow" id="upRow"></div>
+  <button class="btn" id="btnNext">NEXT WAVE &#9654;</button>
+</div>
+
+<div class="overlay" id="ovOver" style="display:none">
+  <h2>THE HORDE BROKE THROUGH</h2>
+  <p id="overInfo"></p>
+  <button class="btn" id="btnRestart">REBUILD &amp; FIGHT AGAIN</button>
+</div>
+
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const rand=(a,b)=>a+Math.random()*(b-a);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+// ---------- AUDIO (WebAudio blips, style reused from zombietoss repo) ----------
+let AC;
+function ai(){if(!AC){try{AC=new(window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume()}
+function tn(f,d,t,v){try{ai();if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=t||'sine';o.frequency.setValueAtTime(f,AC.currentTime);g.gain.setValueAtTime(v||.1,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d)}catch(e){}}
+function ns(d,v){try{ai();if(!AC)return;const n=AC.sampleRate*d,s=AC.createBuffer(1,n,AC.sampleRate),ch=s.getChannelData(0);for(let i=0;i<n;i++)ch[i]=(Math.random()*2-1)*(1-i/n);const src=AC.createBufferSource();src.buffer=s;const g=AC.createGain();g.gain.setValueAtTime(v||.06,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+d);src.connect(g);g.connect(AC.destination);src.start()}catch(e){}}
+const sfx={
+  match:()=>{tn(440,.07,'square',.07);setTimeout(()=>tn(660,.08,'square',.07),60)},
+  cascade:()=>{tn(660,.06,'square',.07);setTimeout(()=>tn(880,.09,'square',.07),60)},
+  kill:()=>{tn(180,.12,'square',.09);tn(90,.08,'sawtooth',.06);ns(.06,.1)},
+  hurt:()=>{tn(120,.18,'sawtooth',.1);ns(.12,.08)},
+  wave:()=>{tn(523,.08,'sine',.09);setTimeout(()=>tn(659,.08,'sine',.09),80);setTimeout(()=>tn(784,.12,'sine',.09),160)},
+  buy:()=>{tn(880,.05,'square',.06);setTimeout(()=>tn(1174,.07,'square',.06),60)},
+  over:()=>{tn(440,.12,'square',.07);setTimeout(()=>tn(330,.15,'square',.06),150);setTimeout(()=>tn(220,.2,'square',.07),300);setTimeout(()=>tn(110,.5,'sawtooth',.06),500)},
+  bad:()=>{tn(160,.1,'square',.05)}
+};
+
+// ---------- COLORS (tiles) ----------
+const COLORS=[
+ {name:'fire',  emoji:'\u{1F525}', bg:'#c0392b'},
+ {name:'ice',   emoji:'\u2744\uFE0F', bg:'#2471a3'},
+ {name:'nature',emoji:'\u{1F33F}', bg:'#1e8449'},
+ {name:'bolt',  emoji:'\u26A1',     bg:'#b7950b'},
+ {name:'arcane',emoji:'\u{1F52E}', bg:'#7d3c98'}
+];
+
+// ---------- ZOMBIE TYPES (mechanics reused from zombietoss repo) ----------
+const ZTYPES={
+ regular:{emoji:'\u{1F9DF}',hp:30,spd:1.0,gold:5,dps:4,armor:0,size:36},
+ runner: {emoji:'\u{1F9DF}',hp:20,spd:1.9,gold:8,dps:3,armor:0,size:28},
+ armored:{emoji:'\u{1F9DF}',hp:55,spd:0.8,gold:12,dps:6,armor:.35,size:40,cls:'armored'},
+ brute:  {emoji:'\u{1F9DF}',hp:170,spd:.55,gold:40,dps:14,armor:.2,size:54,cls:'brute'}
+};
+function spawnWeights(w){
+ return {regular:Math.max(50,100-w*10),armored:Math.min(40,w*5),runner:Math.min(30,w*3),brute:w>=5?Math.min(20,(w-4)*4):0};
+}
+
+// ---------- STATE ----------
+const G=7; // grid size
+let S=null;
+function freshState(classId){
+ return {screen:'game',classId:classId,wave:1,gold:0,score:0,kills:0,
+  maxHp:100,hp:100,
+  up:{dmg:0,vit:0,greed:0,perk:0},
+  grid:[],zombies:[],zid:0,busy:false,sel:null,chain:0,
+  spawnQueue:0,spawnT:0,spawnInt:2.2,time:0,over:false};
+}
+function saveGame(){
+ if(!S)return;
+ try{localStorage.setItem('zms_save',JSON.stringify({classId:S.classId,wave:S.wave,gold:S.gold,maxHp:S.maxHp,hp:S.hp,up:S.up}))}catch(e){}
+}
+function loadSave(){
+ try{const d=JSON.parse(localStorage.getItem('zms_save')||'null');return d&&d.classId?d:null}catch(e){return null}
+}
+function applySave(d){
+ S=freshState(d.classId);S.wave=d.wave||1;S.gold=d.gold||0;S.maxHp=d.maxHp||100;S.hp=clamp(d.hp||S.maxHp,1,S.maxHp);S.up=Object.assign({dmg:0,vit:0,greed:0,perk:0},d.up);
+}
+
+// ---------- LAYOUT ----------
+let W,H,CS,LANES=5,LH=0;
+function layout(){
+ W=window.innerWidth;H=window.innerHeight;
+ const f=$('field');f.style.height=Math.round(H*0.34)+'px';
+ LH=(H*0.34)/LANES;
+ CS=Math.floor(Math.min((Math.min(W,520)-14)/G,(H*0.52)/G));
+ const g=$('grid');g.style.width=CS*G+'px';g.style.height=CS*G+'px';
+ const f2=$('field');f2.querySelectorAll('.lanebg').forEach(e=>e.remove());
+ for(let i=0;i<LANES;i++){const d=document.createElement('div');d.className='lanebg';d.style.top=(i*LH)+'px';d.style.height=LH+'px';d.style.background=i%2?'rgba(255,255,255,.03)':'rgba(0,0,0,.12)';f2.appendChild(d)}
+ renderAllTiles();
+}
+window.addEventListener('resize',layout);
+
+// ---------- GRID ----------
+function newTile(r,c){return{r:r,c:c,color:Math.floor(rand(0,COLORS.length)),el:null}}
+function buildGrid(){
+ S.grid=[];
+ for(let r=0;r<G;r++){S.grid.push([]);for(let c=0;c<G;c++)S.grid[r].push(newTile(r,c))}
+ // avoid starting matches
+ let guard=0;
+ while(findMatches().length&&guard++<50){
+  findMatches().forEach(gp=>gp.cells.forEach(cell=>{S.grid[cell.r][cell.c].color=Math.floor(rand(0,COLORS.length))}));
+ }
+ if(!hasMove())buildGrid();
+}
+function tilePos(t){return{x:t.c*CS+2,y:t.r*CS+2}}
+function renderTile(t){
+ if(!t.el){
+  t.el=document.createElement('div');t.el.className='tile';t.el.dataset.r=t.r;t.el.dataset.c=t.c;
+  $('grid').appendChild(t.el);
+ }
+ const p=tilePos(t);
+ t.el.style.width=(CS-4)+'px';t.el.style.height=(CS-4)+'px';
+ t.el.style.transform='translate('+p.x+'px,'+p.y+'px)';
+ t.el.style.background=COLORS[t.color].bg;
+ t.el.style.fontSize=Math.round(CS*0.52)+'px';
+ t.el.textContent=COLORS[t.color].emoji;
+}
+function renderAllTiles(){if(!S||!S.grid.length)return;S.grid.forEach(row=>row.forEach(renderTile))}
+
+function findMatches(){
+ const groups=[],g=S.grid;
+ for(let r=0;r<G;r++){let run=1;for(let c=1;c<=G;c++){
+  if(c<G&&g[r][c].color===g[r][c-1].color){run++}else{if(run>=3){const cells=[];for(let k=c-run;k<c;k++)cells.push({r:r,c:k});groups.push({color:g[r][c-1].color,cells:cells})}run=1}}}
+ for(let c=0;c<G;c++){let run=1;for(let r=1;r<=G;r++){
+  if(r<G&&g[r][c].color===g[r-1][c].color){run++}else{if(run>=3){const cells=[];for(let k=r-run;k<r;k++)cells.push({r:k,c:c});groups.push({color:g[r-1][c].color,cells:cells})}run=1}}}
+ return groups;
+}
+function wouldMatch(r1,c1,r2,c2){
+ const g=S.grid;
+ let tmp=g[r1][c1].color;g[r1][c1].color=g[r2][c2].color;g[r2][c2].color=tmp;
+ const m=findMatches().length>0;
+ tmp=g[r1][c1].color;g[r1][c1].color=g[r2][c2].color;g[r2][c2].color=tmp;
+ return m;
+}
+function hasMove(){
+ for(let r=0;r<G;r++)for(let c=0;c<G;c++){
+  if(c<G-1&&wouldMatch(r,c,r,c+1))return true;
+  if(r<G-1&&wouldMatch(r,c,r+1,c))return true;
+ }
+ return false;
+}
+const delay=ms=>new Promise(res=>setTimeout(res,ms));
+
+async function doSwap(a,b){
+ if(S.busy||S.over)return;
+ if(Math.abs(a.r-b.r)+Math.abs(a.c-b.c)!==1)return;
+ S.busy=true;
+ const t1=S.grid[a.r][a.c],t2=S.grid[b.r][b.c];
+ S.grid[a.r][a.c]=t2;S.grid[b.r][b.c]=t1;
+ t1.r=b.r;t1.c=b.c;t2.r=a.r;t2.c=a.c;
+ renderTile(t1);renderTile(t2);
+ await delay(190);
+ if(!findMatches().length){ // swap back
+  S.grid[a.r][a.c]=t1;S.grid[b.r][b.c]=t2;
+  t1.r=a.r;t1.c=a.c;t2.r=b.r;t2.c=b.c;
+  renderTile(t1);renderTile(t2);sfx.bad();
+  await delay(190);S.busy=false;return;
+ }
+ S.chain=0;
+ await resolveBoard();
+ if(!hasMove()){shuffleGrid()}
+ S.busy=false;
+}
+function shuffleGrid(){
+ const colors=[];S.grid.forEach(row=>row.forEach(t=>colors.push(t.color)));
+ let guard=0;
+ do{
+  for(let i=colors.length-1;i>0;i--){const j=Math.floor(rand(0,i+1));const x=colors[i];colors[i]=colors[j];colors[j]=x}
+  let k=0;S.grid.forEach(row=>row.forEach(t=>{t.color=colors[k++]}));
+ }while((findMatches().length||!hasMove())&&guard++<80);
+ renderAllTiles();toast('Shuffled!');
+}
+async function resolveBoard(){
+ let groups=findMatches();
+ while(groups.length){
+  S.chain++;
+  if(S.chain>1)sfx.cascade();else sfx.match();
+  groups.forEach(gp=>gp.cells.forEach(cell=>{const t=S.grid[cell.r][cell.c];if(t.el)t.el.classList.add('pop')}));
+  attack(groups,S.chain);
+  await delay(200);
+  // remove popped
+  const removed=new Set();
+  groups.forEach(gp=>gp.cells.forEach(cell=>removed.add(cell.r+','+cell.c)));
+  removed.forEach(key=>{
+   const rc=key.split(','),t=S.grid[+rc[0]][+rc[1]];
+   if(t.el){t.el.remove()}
+  });
+  // collapse columns
+  for(let c=0;c<G;c++){
+   let write=G-1;
+   for(let r=G-1;r>=0;r--){
+    const t=S.grid[r][c];
+    if(!removed.has(r+','+c)){
+     if(write!==r){S.grid[write][c]=t;t.r=write;t.c=c}
+     write--;
+    }
+   }
+   for(let r=write;r>=0;r--){S.grid[r][c]=newTile(r,c)}
+  }
+  renderAllTiles();
+  await delay(200);
+  groups=findMatches();
+ }
+ S.chain=0;
+}
+
+// ---------- INPUT (touch-first: tap-tap or swipe) ----------
+let touchStart=null;
+$('grid').addEventListener('pointerdown',e=>{
+ const el=e.target.closest('.tile');if(!el||!S||S.busy)return;
+ touchStart={r:+el.dataset.r,c:+el.dataset.c,x:e.clientX,y:e.clientY};
+});
+$('grid').addEventListener('pointerup',e=>{
+ if(!touchStart||!S||S.busy){touchStart=null;return}
+ const dx=e.clientX-touchStart.x,dy=e.clientY-touchStart.y;
+ const a={r:touchStart.r,c:touchStart.c};
+ if(Math.abs(dx)>24||Math.abs(dy)>24){ // swipe
+  const b={r:a.r,c:a.c};
+  if(Math.abs(dx)>Math.abs(dy))b.c+=dx>0?1:-1;else b.r+=dy>0?1:-1;
+  clearSel();
+  if(b.r>=0&&b.r<G&&b.c>=0&&b.c<G)doSwap(a,b);
+ }else{ // tap
+  if(S.sel&&S.sel.r===a.r&&S.sel.c===a.c){clearSel()}
+  else if(S.sel&&Math.abs(S.sel.r-a.r)+Math.abs(S.sel.c-a.c)===1){const s=S.sel;clearSel();doSwap(s,a)}
+  else{clearSel();S.sel=a;const t=S.grid[a.r][a.c];if(t.el)t.el.classList.add('sel')}
+ }
+ touchStart=null;
+});
+function clearSel(){if(S&&S.sel){const t=S.grid[S.sel.r][S.sel.c];if(t&&t.el)t.el.classList.remove('sel')}if(S)S.sel=null}
+
+// ---------- COMBAT ----------
+function classDmgMult(){let m=1;if(S.classId==='soldier')m*=1.3;return m}
+function attack(groups,chain){
+ const zs=S.zombies.filter(z=>z.alive);
+ if(!zs.length)return;
+ groups.forEach(gp=>{
+  const cn=COLORS[gp.color].name;
+  const size=gp.cells.length;
+  let dmg=size*8*(1+0.2*S.up.dmg)*(1+0.5*(chain-1));
+  if(size===4)dmg*=1.5;if(size>=5)dmg*=2;
+  dmg*=classDmgMult();
+  // target: frontmost zombie
+  const target=zs.reduce((a,b)=>!a||b.x>a.x?b:a,null);
+  if(!target)return;
+  if(cn==='fire')dmg*=S.classId==='soldier'?2.2:1.6;
+  let crit=false;
+  if(S.classId==='soldier'&&S.up.perk>0&&Math.random()<0.1*S.up.perk){dmg*=3;crit=true}
+  dealDamage(target,dmg,cn,crit);
+  if(cn==='ice'){const dur=S.classId==='mage'?3+S.up.perk:2;zs.forEach(z=>z.slowT=Math.max(z.slowT,dur))}
+  if(cn==='nature')healBarricade(size*2);
+  if(cn==='bolt'){const others=zs.filter(z=>z!==target).sort((a,b)=>b.x-a.x).slice(0,2);others.forEach(z=>dealDamage(z,dmg*0.5,cn,false))}
+  if(S.classId==='mage'){
+   const spl=0.6+0.1*S.up.perk;
+   zs.filter(z=>z!==target&&z.lane===target.lane).forEach(z=>dealDamage(z,dmg*spl,cn,false));
+  }
+ });
+}
+function dealDamage(z,dmg,cn,crit){
+ if(!z.alive)return;
+ let d=dmg;
+ if(cn==='arcane'){if(z.type==='brute')d*=1.5}
+ else d*= (1-z.armor);
+ d=Math.max(1,Math.round(d));
+ z.hp-=d;
+ floatText(z,d+(crit?'!':''),crit?'#ffd24a':'#fff');
+ updateZombieEl(z);
+ if(z.hp<=0)killZombie(z);else sfxQuiet();
+}
+let lastHitSfx=0;
+function sfxQuiet(){const n=performance.now();if(n-lastHitSfx>120){lastHitSfx=n;tn(300,.05,'square',.04)}}
+const ZPOINTS={regular:100,runner:150,armored:200,brute:1000};
+function killZombie(z){
+ z.alive=false;
+ S.score+=ZPOINTS[z.type]||100;S.kills++;
+ $('uscore').textContent=S.score;
+ const g=Math.round(ZTYPES[z.type].gold*(1+0.25*S.up.greed));
+ S.gold+=g;$('ugold').textContent=S.gold;
+ floatText(z,'+'+g+'\u{1F4B0}','#ffd24a');
+ z.el.classList.add('dying');
+ sfx.kill();
+ setTimeout(()=>{if(z.el)z.el.remove()},380);
+ setTimeout(saveGame,0);
+}
+function healBarricade(n){S.hp=clamp(S.hp+n,0,S.maxHp);updateHud()}
+
+function floatText(z,txt,color){
+ const f=$('field');const el=document.createElement('div');
+ el.className='float';el.textContent=txt;el.style.color=color;
+ el.style.left=(z.x*(f.clientWidth-40)+10)+'px';
+ el.style.top=(z.lane*LH+4)+'px';
+ f.appendChild(el);setTimeout(()=>el.remove(),820);
+}
+
+// ---------- ZOMBIES ----------
+function spawnZombie(forceType){
+ const w=S.wave;
+ let type=forceType;
+ if(!type){
+  const ws=spawnWeights(w);const total=Object.values(ws).reduce((a,b)=>a+b,0);
+  let r=Math.random()*total;
+  for(const k in ws){r-=ws[k];if(r<=0){type=k;break}}
+  type=type||'regular';
+ }
+ const cfg=ZTYPES[type];
+ const hpScale=1+0.22*(w-1),spdScale=Math.min(1.6,1+0.04*(w-1));
+ const z={id:++S.zid,type:type,lane:Math.floor(rand(0,LANES)),x:1.08,
+  hp:Math.round(cfg.hp*hpScale),maxHp:Math.round(cfg.hp*hpScale),
+  spd:cfg.spd*spdScale*rand(0.9,1.1),armor:cfg.armor,gold:cfg.gold,
+  dps:Math.round(cfg.dps*(1+0.1*(w-1))),slowT:0,attackT:0,alive:true,size:cfg.size,el:null};
+ const el=document.createElement('div');
+ el.className='zombie'+(cfg.cls?' '+cfg.cls:'');
+ el.innerHTML='<span class="zem" style="font-size:'+cfg.size+'px">'+cfg.emoji+'</span><div class="zhp" style="width:'+(cfg.size+6)+'px"><i style="width:100%"></i></div>';
+ $('field').appendChild(el);
+ z.el=el;
+ S.zombies.push(z);
+}
+function updateZombieEl(z){
+ if(!z.el)return;
+ const fw=$('field').clientWidth-40;
+ const y=z.lane*LH+Math.max(0,LH-(z.size||36)-14);
+ z.el.style.transform='translate('+(10+z.x*fw)+'px,'+y+'px)';
+ const bar=z.el.querySelector('.zhp i');
+ if(bar)bar.style.width=clamp(100*z.hp/z.maxHp,0,100)+'%';
+ z.el.classList.toggle('slow',z.slowT>0);
+}
+let lastT=0;
+function loop(t){
+ requestAnimationFrame(loop);
+ if(!S||S.screen!=='game'||S.over)return;
+ const dt=Math.min(0.05,(t-lastT)/1000||0);lastT=t;
+ // spawning
+ if(S.spawnQueue>0){
+  S.spawnT-=dt;
+  if(S.spawnT<=0){spawnZombie();S.spawnQueue--;S.spawnT=S.spawnInt*rand(0.7,1.3)}
+ }
+ // move
+ let reached=false;
+ S.zombies.forEach(z=>{
+  if(!z.alive)return;
+  const slowMult=z.slowT>0?0.5:1;
+  if(z.slowT>0)z.slowT-=dt;
+  z.x-=z.spd*slowMult*dt*0.045;
+  if(z.x<=0.01){
+   z.x=0.01;
+   z.attackT+=dt;
+   if(z.attackT>=1){z.attackT=0;S.hp-=z.dps;reached=true;floatText(z,'-'+z.dps,'#f66')}
+  }
+  updateZombieEl(z);
+ });
+ if(reached){
+  $('app').classList.remove('shake');void $('app').offsetWidth;$('app').classList.add('shake');
+  sfx.hurt();updateHud();
+  if(S.hp<=0){gameOver();return}
+ }
+ // cleanup dead refs
+ S.zombies=S.zombies.filter(z=>z.alive||z.el&&z.el.parentNode);
+ // wave end
+ if(S.spawnQueue===0&&!S.zombies.some(z=>z.alive)){
+  waveComplete();
+ }
+}
+requestAnimationFrame(loop);
+
+// ---------- WAVES ----------
+function startWave(n){
+ S.wave=n;S.over=false;
+ S.spawnQueue=4+2*n+ (n%5===0?2:0);
+ S.spawnInt=Math.max(0.7,2.1-0.1*n);
+ S.spawnT=0.5;
+ S.hp=clamp(S.hp,1,S.maxHp);
+ S.screen='game';
+ $('ovUpgrade').style.display='none';$('ovOver').style.display='none';$('ovTitle').style.display='none';
+ updateHud();sfx.wave();saveGame();
+}
+function waveComplete(){
+ if(S.over)return;
+ S.screen='upgrade';
+ S.zombies.forEach(z=>{if(z.el)z.el.remove()});
+ S.zombies=[];
+ saveGame();
+ const bonus=10+S.wave*5;
+ S.gold+=bonus;$('ugold').textContent=S.gold;
+ S.score+=S.wave*250;$('uscore').textContent=S.score;
+ $('upInfo').innerHTML='Wave '+S.wave+' cleared! Bonus +'+bonus+' gold. Barricade '+Math.max(0,Math.round(S.hp))+'/'+S.maxHp+' HP.';
+ renderUpgrades();
+ $('ovUpgrade').style.display='flex';
+ saveGame();
+}
+function gameOver(){
+ S.over=true;S.screen='over';
+ sfx.over();
+ const rank=lbRecord();
+ $('overInfo').innerHTML='You fell on wave '+S.wave+' with <b style="color:#ffd24a">'+S.score+'</b> pts ('+S.kills+' kills) - rank #'+rank+' locally. Your class, gold and upgrades carry over.'+lbHtml(10);
+ saveGame();
+ $('ovOver').style.display='flex';
+}
+
+// ---------- UPGRADES ----------
+const UPS=[
+ {id:'dmg', name:'Sharper Axes', desc:'+20% match damage', cost:l=>Math.floor(20*Math.pow(1.6,l))},
+ {id:'vit', name:'Reinforce Wall', desc:'+25 max HP, heal to full', cost:l=>Math.floor(25*Math.pow(1.6,l))},
+ {id:'greed',name:'Looting', desc:'+25% gold from kills', cost:l=>Math.floor(15*Math.pow(1.7,l))},
+ {id:'perk',name:'', desc:'', cost:l=>Math.floor(30*Math.pow(1.8,l))}
+];
+function perkInfo(){return S.classId==='soldier'?{name:'Headshot',desc:'+10% chance of 3x crit'}:{name:'Frostbite',desc:'+10% splash, longer slow'}}
+function renderUpgrades(){
+ const row=$('upRow');row.innerHTML='';
+ UPS.forEach(u=>{
+  const lvl=S.up[u.id];
+  const cost=u.cost(lvl);
+  const info=u.id==='perk'?perkInfo():u;
+  const b=document.createElement('button');
+  b.className='upbtn';
+  b.innerHTML='<b>'+info.name+' Lv'+lvl+'</b>'+info.desc+'<br><span class="cost">'+cost+' &#128176;</span>';
+  b.disabled=S.gold<cost;
+  b.onclick=()=>{
+   if(S.gold<cost)return;
+   S.gold-=cost;S.up[u.id]++;
+   if(u.id==='vit'){S.maxHp+=25;S.hp=S.maxHp}
+   sfx.buy();saveGame();updateHud();renderUpgrades();
+   $('upInfo').innerHTML='Gold: '+S.gold+' &#128176;';
+  };
+  row.appendChild(b);
+ });
+ $('btnNext').textContent='NEXT WAVE '+(S.wave+1)+' \u25B6';
+}
+
+// ---------- HUD ----------
+function updateHud(){
+ $('hpfill').style.width=clamp(100*S.hp/S.maxHp,0,100)+'%';
+ $('ugold').textContent=S.gold;
+ $('uscore').textContent=S.score;
+ $('uwave').textContent=S.wave;
+ $('uclass').textContent=S.classId==='soldier'?'\u{1F6E1}':'\u{1F9D9}';
+}
+let toastT=null;
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity=0,1400)}
+
+// ---------- LEADERBOARD (pattern ported from zombietoss systems/leaderboard.js, local-only) ----------
+const LB_KEY='zhm_scores';
+function lbLoad(){try{return JSON.parse(localStorage.getItem(LB_KEY)||'[]')}catch(e){return[]}}
+function lbSave(list){try{localStorage.setItem(LB_KEY,JSON.stringify(list.slice(0,50)))}catch(e){}}
+function lbRecord(){
+ const list=lbLoad();
+ const entry={name:'RJL',score:S.score,wave:S.wave,kills:S.kills,classId:S.classId,timestamp:Date.now()};
+ list.push(entry);
+ list.sort((a,b)=>b.score-a.score);
+ lbSave(list);
+ return list.indexOf(entry)+1;
+}
+function lbTop(n){return lbLoad().slice(0,n||10)}
+function lbHtml(n){
+ const top=lbTop(n);
+ if(!top.length)return '';
+ let h='<div style="margin:10px auto;max-width:320px;text-align:left;font-size:13px;background:#15152a;border:2px solid #3a3a5a;border-radius:10px;padding:8px 12px"><b style="color:#ffd24a">LOCAL HEROES</b><br>';
+ top.forEach((e,i)=>{
+  const d=new Date(e.timestamp);
+  h+='<div style="display:flex;justify-content:space-between;gap:14px;padding:2px 0;white-space:nowrap"><span>'+(i+1)+'. '+e.name+' <span style="color:#889">('+(e.classId==='soldier'?'SOL':'MAG')+' W'+e.wave+')</span></span><b>'+e.score+'</b></div>';
+ });
+ return h+'</div>';
+}
+
+// ---------- FLOW ----------
+function newGame(classId){
+ S=freshState(classId);
+ S.grid=[];document.querySelectorAll('#grid .tile').forEach(e=>e.remove());
+ document.querySelectorAll('#field .zombie').forEach(e=>e.remove());
+ buildGrid();layout();startWave(1);saveGame();
+}
+function continueGame(d){
+ applySave(d);
+ S.grid=[];document.querySelectorAll('#grid .tile').forEach(e=>e.remove());
+ document.querySelectorAll('#field .zombie').forEach(e=>e.remove());
+ buildGrid();layout();startWave(S.wave);
+}
+$('btnSoldier').onclick=()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('soldier')};
+$('btnMage').onclick=()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('mage')};
+$('btnContinue').onclick=()=>{const d=loadSave();if(d)continueGame(d)};
+$('btnNext').onclick=()=>startWave(S.wave+1);
+$('btnRestart').onclick=()=>{
+ // keep class/gold/upgrades, back to wave 1
+ const keep={classId:S.classId,wave:1,gold:S.gold,maxHp:S.maxHp,hp:S.maxHp,up:S.up};
+ try{localStorage.setItem('zms_save',JSON.stringify(keep))}catch(e){}
+ continueGame(keep);
+};
+// boot
+(function(){
+ const d=loadSave();
+ if(d){const b=$('btnContinue');b.style.display='block';b.textContent='CONTINUE \u2014 WAVE '+d.wave+' ('+(d.classId==='soldier'?'Soldier':'Mage')+')'}
+ $('titleBoard').innerHTML=lbHtml(5);
+})();
+// periodic autosave
+setInterval(()=>{if(S&&S.screen==='game')saveGame()},5000);
+
+// test hooks
+window.__ZT={get S(){return S},newGame:newGame,continueGame:continueGame,loadSave:loadSave,saveGame:saveGame,
+ findSwap:function(){for(let r=0;r<G;r++)for(let c=0;c<G;c++){if(c<G-1&&wouldMatch(r,c,r,c+1))return[{r:r,c:c},{r:r,c:c+1}];if(r<G-1&&wouldMatch(r,c,r+1,c))return[{r:r,c:c},{r:r+1,c:c}]}return null},
+ doSwap:doSwap,spawnZombie:spawnZombie};
+</script>
+</body>
+</html>
