@@ -59,3 +59,21 @@ flow self-reloads). v5 adds:
 - Airplane mode on hardware (offline self-containment is gate-tested, SW cache
   verified, but not flown yet).
 - Balance beyond ~wave 8; long-run battery impact of weather layers on hardware.
+
+---
+
+## v7 handoff - 2026-09-14 (modes, challenges, randomness, local co-op)
+
+User ask (iMessage, in-flight): "Game needs game modes and challenges and randomness" + "And multiplayer somehow maybe itch?".
+
+Shipped on main:
+- MODES: classic / bossrush (every wave a boss, 2x boss gold) / swarm (1.8x count, 0.65x interval, 0.85x HP) / survival (no repairs, +50% gold, death wipes save) / coop (local 2P: P2 hero auto-fights, own ability button ab2Btn, passives of both heroes stack via hasPassive, zombies 1.5x HP, 1.3x count) / daily (25 fixed waves, mulberry32 seed from local YYYYMMDD, shareable dailyCode D<date>-<score36>-<kills36>-<chk36>, save wiped at end).
+- Seeded RNG tap: RNGF/rnd() wrap Math.random; daily mode swaps in mulberry32(dailySeed()). Gameplay rolls (weather, spawns, mutators, challenges, elite promotion, crits, supply drop) all flow through it.
+- MUTATORS (wave 3+, 55% for 1, wave 12+ 35% for 2): swift/thick/elite/goldrush/glass/stampede; applied in spawnZombie + killZombie gold; HUD badge #umuts.
+- CHALLENGES (wave 2+, 65% chance): killrace/flawless/bigmatch/earner; reward-only (+gold, +40 XP); tracked via _waveHits/_bigMatch/chal.prog.
+- Random events: stampede (runner pack mid-wave via stampedeT), supplyDrop() tappable crate (18% from wave 4, dropT).
+- 8 new achievements (challenger/champ/daily1/daily7/buddy/mutwin/rush10/surv10); META.stats extended (challengesDone, dailiesDone, coopWaves, mutWaves, bestBossRush, bestSurvival).
+- Multiplayer decision: online MP rejected for a static offline-first PWA (needs a server, breaks the no-external-requests gate, unverifiable) -> local co-op + seeded daily codes as the honest "multiplayer somehow".
+- itch.io: NOT published - needs Roger's itch login; index.html uploads as-is. Rename question still open.
+- Dual entry points index.html / zombie-hero-match.html remain byte-identical (gate enforces).
+- SW cache bumped to zhm-v7. Gates: 21/21 (16 existing + 5 v7).

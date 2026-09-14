@@ -128,7 +128,7 @@ test('v6 weather roll: per-wave, never repeats, boss waves court storms', () => 
   const m = html.match(/function rollWeather\(\)\{[\s\S]*?\n\}/);
   assert.ok(m, 'rollWeather found');
   let S = { wave: 1, weather: 'clear' };
-  eval(m[0] + '\nglobalThis.__rw = rollWeather;');
+  eval('const rnd=()=>Math.random();\n' + m[0] + '\nglobalThis.__rw = rollWeather;');
   const rollWeather = globalThis.__rw;
   // never repeats the previous condition
   for (let i = 0; i < 400; i++) {
@@ -146,4 +146,37 @@ test('v6 weather roll: per-wave, never repeats, boss waves court storms', () => 
   S = { wave: 10, weather: null };
   for (let i = 0; i < 2000; i++) if (rollWeather() === 'storm') storms++;
   assert.ok(storms / 2000 > 0.22, 'boss-wave storm rate too low: ' + storms / 2000);
+});
+
+test('v7 systems present: modes, mutators, challenges, seeded daily, co-op, events', () => {
+  for (const needle of ['MODES', 'rollMutators', 'MUTATORS', 'hasMut', 'rollChallenge', 'CHALLENGES', 'mulberry32', 'RNGF', 'dailyDayStr', 'dailySeed', 'dailyCode', 'dailyComplete', 'DAILY_WAVES', 'modeRow', 'selectMode', 'pickClass', 'pendingMode', 'allyPos', 'ensureAlly', 'allyAttack', 'allyAtkAnim', 'castAllyAbility', 'castAbilityFor', 'ab2Btn', 'hero2', 'stampedeT', 'supplyDrop', 'dropT', 'bossrush', 'swarm', 'survival', 'coop', 'daily', 'challengesDone', 'dailiesDone', 'coopWaves', 'mutWaves', '_waveHits', '_bigMatch', 'umuts', 'modeDesc', 'pickLabel']) {
+    assert.ok(html.includes(needle), 'missing: ' + needle);
+  }
+});
+
+test('v7 mode roster covers six modes with descriptions', () => {
+  for (const m of ["classic:{icon:", "bossrush:{icon:", "swarm:{icon:", "survival:{icon:", "coop:{icon:", "daily:{name:"]) {
+    assert.ok(html.includes(m), 'mode missing: ' + m);
+  }
+});
+
+test('v7 daily run is seeded deterministically through the shared RNG tap', () => {
+  assert.match(html, /RNGF=mulberry32\(dailySeed\(\)\)/);
+  assert.match(html, /const rnd=\(\)=>RNGF\(\)/);
+  assert.match(html, /const rand=\(a,b\)=>a\+RNGF\(\)\*\(b-a\)/);
+});
+
+test('v7 mutator roster and challenge roster are well-formed', () => {
+  for (const m of ['swift:{icon:', 'thick:{icon:', 'elite:{icon:', 'goldrush:{icon:', 'glass:{icon:', 'stampede:{icon:']) {
+    assert.ok(html.includes(m), 'mutator missing: ' + m);
+  }
+  for (const c of ["id:'killrace'", "id:'flawless'", "id:'bigmatch'", "id:'earner'"]) {
+    assert.ok(html.includes(c), 'challenge missing: ' + c);
+  }
+});
+
+test('v7 survival blocks barricade repair and daily has a fixed length', () => {
+  assert.match(html, /if\(S&&S\.mode==='survival'\)return;S\.hp=clamp/);
+  assert.match(html, /const DAILY_WAVES=25/);
+  assert.match(html, /S\.mode==='daily'&&n>DAILY_WAVES/);
 });

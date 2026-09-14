@@ -90,6 +90,18 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:
 .btn:disabled{opacity:.4}
 .classbtn{width:300px;text-align:left;padding:12px 14px;font-size:15px}
 .classbtn small{display:block;font-weight:normal;color:#cbd;font-size:12px;margin-top:3px}
+.modebtn{display:inline-block;margin:3px;padding:8px 10px;font-family:inherit;font-size:12px;font-weight:bold;color:#fff;background:#2a2a4a;border:2px solid #4a4a7a;border-radius:10px;cursor:pointer;touch-action:manipulation}
+.modebtn.sel{background:#2a4a2a;border-color:#6ab04a;box-shadow:0 0 10px rgba(106,176,74,.5)}
+#modeRow{max-width:340px;margin-bottom:4px}
+#modeDesc{min-height:32px;margin-bottom:6px}
+#pickLabel{color:#8f8;font-size:14px;letter-spacing:2px;margin:4px 0}
+#hero.coopp1{top:30%}
+#hero2{position:absolute;left:14px;top:70%;margin-top:-24px;font-size:42px;line-height:1;z-index:6;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.75));animation:bob 2.2s ease-in-out infinite}
+#hero2.atk{animation:atk .3s ease}
+#ab2Btn{position:absolute;left:12px;bottom:76px;z-index:8;width:58px;height:58px;border-radius:50%;background:#4a2222;border:3px solid #ca6a6a;color:#fff;font-family:inherit;font-size:22px;display:none;align-items:center;justify-content:center;flex-direction:column;cursor:pointer;touch-action:manipulation;box-shadow:0 0 12px rgba(220,90,90,.5)}
+#ab2Btn small{font-size:9px;display:block;letter-spacing:.5px}
+#ab2Btn.cd{opacity:.55;border-color:#6a4a4a;box-shadow:none}
+.drop{position:absolute;font-size:30px;z-index:9;cursor:pointer;animation:bob 1s ease-in-out infinite;filter:drop-shadow(0 0 8px gold);touch-action:manipulation}
 .uprow{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;max-width:400px}
 .upbtn{width:170px;padding:10px 8px;font-family:inherit;font-size:13px;color:#fff;background:#2a2a4a;border:2px solid #5a5a9a;border-radius:10px;cursor:pointer;touch-action:manipulation}
 .upbtn:active{transform:scale(.95)}
@@ -110,7 +122,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:
     <div class="stat heroStat"><span id="uhero">&#129448;</span>Lv<b id="ulvl">1</b><div id="xpbar"><i id="xpfill"></i></div></div>
     <div class="stat">&#11088; <b id="uscore">0</b></div>
     <div class="stat">&#128176; <b id="ugold">0</b></div>
-    <div class="stat"><span id="uweather"></span>W<b id="uwave">1</b></div>
+    <div class="stat"><span id="uweather"></span><span id="umuts"></span>W<b id="uwave">1</b></div>
   </div>
   <div id="field"><canvas id="wback"></canvas><canvas id="gorecv"></canvas><div id="weather"><div id="wflash"></div></div><canvas id="wfore"></canvas><div id="combo"></div></div>
   <div id="gridwrap"><div id="grid"></div></div>
@@ -120,6 +132,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:
 <div class="overlay" id="ovTitle">
   <h1>RJL'S ZOMBIE<br>HERO MATCH</h1>
   <p>Your hero holds the barricade on the left - every match powers their attacks. 5 classes, 100+ waves, a boss every 10th. Weather rolls in and changes the fight, combos pay big, and every kill pays out in gore.</p>
+  <div id="modeRow">
+    <button class="modebtn" data-mode="classic">&#127743;&#65038; CLASSIC</button>
+    <button class="modebtn" data-mode="bossrush">&#128128; BOSS RUSH</button>
+    <button class="modebtn" data-mode="swarm">&#129439; SWARM</button>
+    <button class="modebtn" data-mode="survival">&#129354; SURVIVAL</button>
+    <button class="modebtn" data-mode="coop">&#129309; CO-OP 2P</button>
+    <button class="modebtn" data-mode="daily">&#128197; DAILY</button>
+  </div>
+  <p id="modeDesc"></p>
+  <h3 id="pickLabel">PICK YOUR HERO</h3>
   <button class="btn classbtn" id="btnSoldier">&#128737; SOLDIER<small>+30% all damage, fire hits 2.2x. Lv2: Crit Burst. Lv4: Shockwave slam (tap button).</small></button>
   <button class="btn classbtn" id="btnMage">&#129497; MAGE<small>Every match splashes the lane. Lv2: Chain Nova. Lv4: Deep Freeze (tap button).</small></button>
   <button class="btn classbtn" id="btnRanger">&#129693; RANGER<small>+15% damage, fast tracer hits. Lv2: Volley. Lv4: Arrow Storm (tap button).</small></button>
@@ -154,7 +176,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:#0a0a14;font-family:
 <script>
 'use strict';
 const $=id=>document.getElementById(id);
-const rand=(a,b)=>a+Math.random()*(b-a);
+let RNGF=Math.random;
+const rand=(a,b)=>a+RNGF()*(b-a);
+const rnd=()=>RNGF();
+function mulberry32(seed){let a=seed>>>0;return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 // ---------- AUDIO (WebAudio blips, style reused from zombietoss repo) ----------
@@ -214,11 +239,81 @@ const HEROES={
   {lvl:4,id:'deathwave',name:'Death Wave',cd:24,emoji:'\u{1F480}',desc:'Damage every zombie, grows with your kill count'}]}
 };
 const XPVAL={regular:10,runner:14,armored:20,brute:60,boss:200};
+
+// ---------- MODES (v7) ----------
+const MODES={
+ classic:{icon:'\u{1F3DF}\u{FE0F}',name:'Classic',desc:'The full campaign - 100+ waves, a boss every 10th, endless scaling.'},
+ bossrush:{icon:'\u{1F480}',name:'Boss Rush',desc:'Every wave is a boss wave. Bosses scale fast and pay 2x gold.'},
+ swarm:{icon:'\u{1F99F}',name:'Swarm',desc:'Huge fast waves - 80% more zombies, 35% quicker spawns, slightly softer bodies.'},
+ survival:{icon:'\u{1F94A}',name:'Survival',desc:'One life. No barricade repairs of any kind - but kills pay +50% gold. Death wipes the save.'},
+ coop:{icon:'\u{1F91D}',name:'Co-op 2P',desc:'Local co-op on one screen: P1 runs the board, P2\u2019s hero auto-fights beside you with their own ability button. Both heroes\u2019 passives stack. Zombies are 50% tougher.'},
+ daily:{name:'Daily',icon:'\u{1F4C5}',desc:'One fixed 25-wave run seeded from today\u2019s date - identical weather, mutators and spawns for every player. Finish or fall, then compare daily codes.'}
+};
+const DAILY_WAVES=25;
+function dailyDayStr(){const d=new Date();return d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)}
+function dailySeed(){return parseInt(dailyDayStr(),10)}
+function dailyCode(){
+ const s=S.score,k=S.kills,w=S.wave;
+ const chk=(s*31+k*7+w*13)%46656;
+ return 'D'+(S.day||dailyDayStr())+'-'+s.toString(36).toUpperCase()+'-'+k.toString(36).toUpperCase()+'-'+chk.toString(36).toUpperCase();
+}
+
+// ---------- MUTATORS (v7: per-wave random modifiers) ----------
+const MUTATORS={
+ swift:{icon:'\u{1F4A8}',name:'Swift',desc:'horde +30% speed'},
+ thick:{icon:'\u{1F9F1}',name:'Thick-skinned',desc:'horde +45% HP'},
+ elite:{icon:'\u{1F396}\u{FE0F}',name:'Elite',desc:'many regulars rise armored'},
+ goldrush:{icon:'\u{1F4B0}',name:'Gold Rush',desc:'kills pay 2x gold'},
+ glass:{icon:'\u{1F94A}',name:'Glass Horde',desc:'horde -30% HP, +25% speed'},
+ stampede:{icon:'\u{1F40E}',name:'Stampede',desc:'a runner pack charges mid-wave'}
+};
+function hasMut(id){return !!(S&&S.muts&&S.muts.indexOf(id)>=0)}
+function rollMutators(n){
+ S.muts=[];
+ if(n<3)return;
+ const keys=Object.keys(MUTATORS);
+ const count=n>=12&&rnd()<.35?2:(rnd()<.55?1:0);
+ for(let i=0;i<count;i++){const k=keys[Math.floor(rand(0,keys.length))];if(S.muts.indexOf(k)<0)S.muts.push(k)}
+}
+
+// ---------- WAVE CHALLENGES (v7: optional per-wave objectives, reward only) ----------
+const CHALLENGES=[
+ {id:'killrace',icon:'\u{2694}\u{FE0F}',name:'Kill Race',desc:'Kill 12+ zombies this wave'},
+ {id:'flawless',icon:'\u{1F6E1}\u{FE0F}',name:'Flawless',desc:'Take no barricade damage this wave'},
+ {id:'bigmatch',icon:'\u{2728}',name:'Big Match',desc:'Make a 4+ match this wave'},
+ {id:'earner',icon:'\u{1F4B0}',name:'Earner',desc:'Earn 80+ gold from kills this wave'}
+];
+function rollChallenge(n){
+ S.chal=null;
+ if(n<2||rnd()<.35)return;
+ const c=CHALLENGES[Math.floor(rand(0,CHALLENGES.length))];
+ S.chal={id:c.id,icon:c.icon,name:c.name,desc:c.desc,prog:0};
+}
+
+// ---------- RANDOM EVENTS (v7) ----------
+function supplyDrop(){
+ if(!S||S.over||S.screen!=='game')return;
+ const f=$('field');const el=document.createElement('div');el.className='drop';el.textContent='\u{1F4E6}';
+ const lane=Math.floor(rand(0,LANES));
+ el.style.top=(lane*LH+Math.max(0,LH/2-18))+'px';el.style.left='55%';
+ f.appendChild(el);
+ let taken=false;
+ bindTap(el,()=>{
+  if(taken)return;taken=true;el.remove();
+  if(rnd()<.5){const g=30+S.wave*3;S.gold+=g;$('ugold').textContent=S.gold;toast('\u{1F4B0} Supply drop: +'+g+' gold!')}
+  else{healBarricade(Math.round(S.maxHp*.15));toast('\u{2764}\u{FE0F} Supply drop: barricade patched!')}
+  sfx.buy();saveGame();
+ });
+ setTimeout(()=>{if(!taken&&el.parentNode)el.remove()},5000);
+}
 function heroDef(){return HEROES[S.classId]||HEROES.soldier}
 function xpNeed(l){return 50+40*l}
 function heroUnlocked(){return heroDef().abil.filter(a=>S.heroLvl>=a.lvl)}
 function activeAbility(){return heroDef().abil.find(a=>!a.passive&&S.heroLvl>=a.lvl)||null}
-function hasPassive(id){return heroUnlocked().some(a=>a.id===id)}
+function hasPassive(id){return heroUnlocked().some(a=>a.id===id)||(S&&S.mode==='coop'&&allyUnlocked().some(a=>a.id===id))}
+function allyDef(){return S&&S.class2Id?HEROES[S.class2Id]:null}
+function allyUnlocked(){const d=allyDef();return d?d.abil.filter(a=>S.heroLvl>=a.lvl):[]}
+function allyAbility(){const d=allyDef();return d?d.abil.find(a=>!a.passive&&S.heroLvl>=a.lvl)||null:null}
 function gainXP(n){
  if(!S||S.over)return;
  S.heroXP+=n;
@@ -241,25 +336,40 @@ function updateHeroHud(){
  if(!S)return;
  $('ulvl').textContent=S.heroLvl;
  $('xpfill').style.width=clamp(100*S.heroXP/xpNeed(S.heroLvl),0,100)+'%';
- $('uhero').textContent=heroDef().emoji;
+ $('uhero').textContent=heroDef().emoji+(S.mode==='coop'&&allyDef()?allyDef().emoji:'');
  const h=$('hero');if(h)h.textContent=heroDef().emoji;
+ const h2=$('hero2');if(h2&&allyDef())h2.textContent=allyDef().emoji;
 }
 function renderAbilityBtn(){
- const b=$('abBtn');const ab=S?activeAbility():null;
+ if(!S)return;
+ renderAbBtn($('abBtn'),activeAbility());
+ if(S.mode==='coop')renderAbBtn($('ab2Btn'),allyAbility());
+ else{const b2=$('ab2Btn');if(b2)b2.style.display='none'}
+}
+function renderAbBtn(b,ab){
+ if(!b)return;
  if(!ab||S.screen!=='game'){b.style.display='none';return}
- b.style.display='flex';
- updateAbilityBtn();
+ b.style.display='flex';updateAbilityBtn();
 }
 function updateAbilityBtn(){
- const b=$('abBtn');const ab=activeAbility();if(!ab)return;
- if(S.abCD>0){b.classList.add('cd');b.innerHTML=ab.emoji+'<small>'+Math.ceil(S.abCD)+'s</small>'}
+ if(!S)return;
+ updAbBtn($('abBtn'),activeAbility(),S.abCD);
+ if(S.mode==='coop')updAbBtn($('ab2Btn'),allyAbility(),S.ab2CD);
+}
+function updAbBtn(b,ab,cd){
+ if(!b||!ab)return;
+ if(cd>0){b.classList.add('cd');b.innerHTML=ab.emoji+'<small>'+Math.ceil(cd)+'s</small>'}
  else{b.classList.remove('cd');b.innerHTML=ab.emoji+'<small>READY</small>'}
 }
-function castAbility(){
- const ab=activeAbility();
- if(!ab||!S||S.over||S.screen!=='game'||S.abCD>0)return;
- S.abCD=ab.cd;
- heroAtkAnim();
+function castAbility(){castAbilityFor(1)}
+function castAllyAbility(){castAbilityFor(2)}
+function castAbilityFor(h){
+ const ally=h===2;
+ const ab=ally?allyAbility():activeAbility();
+ if(!ab||!S||S.over||S.screen!=='game')return;
+ if(ally){if(S.ab2CD>0)return;S.ab2CD=ab.cd}else{if(S.abCD>0)return;S.abCD=ab.cd}
+ if(ally)allyAtkAnim();else heroAtkAnim();
+ const origin=ally?allyPos():heroPos();
  if(ab.id==='shockwave'){
   sfx.kill();ns(.25,.12);
   ringVisual('#ffd24a');
@@ -279,7 +389,7 @@ function castAbility(){
     if(!S||S.over)return;
     const alive=S.zombies.filter(z=>z.alive);if(!alive.length)return;
     const t=alive[Math.floor(rand(0,alive.length))];
-    spawnProj(heroPos(),zPos(t),'\u{27B9}',110);
+    spawnProj(origin,zPos(t),'\u{27B9}',110);
     dealDamage(t,40+10*S.heroLvl,'bolt',false);
    },i*90);
   }
@@ -300,23 +410,24 @@ function castAbility(){
 // ---------- STATE ----------
 const G=7; // grid size
 let S=null;
-function freshState(classId){
- return {screen:'game',classId:classId,wave:1,gold:0,score:0,kills:0,
-  maxHp:100,hp:100,heroLvl:1,heroXP:0,abCD:0,
+function freshState(classId,mode,class2Id){
+ return {screen:'game',classId:classId,mode:mode||'classic',class2Id:class2Id||null,day:null,wave:1,gold:0,score:0,kills:0,
+  maxHp:100,hp:100,heroLvl:1,heroXP:0,abCD:0,ab2CD:0,allyT:1.3,
   up:{dmg:0,vit:0,greed:0,perk:0},
   grid:[],zombies:[],zid:0,busy:false,sel:null,chain:0,
-  spawnQueue:0,spawnT:0,spawnInt:2.2,time:0,over:false,bossPending:false,weather:'clear'};
+  spawnQueue:0,spawnT:0,spawnInt:2.2,time:0,over:false,bossPending:false,weather:'clear',
+  muts:[],chal:null,stampedeT:0,dropT:0,_waveHits:0,_bigMatch:false,_waveGold:0};
 }
 function saveGame(){
  if(!S)return;
- try{localStorage.setItem('zms_save',JSON.stringify({classId:S.classId,wave:S.wave,gold:S.gold,score:S.score,kills:S.kills,maxHp:S.maxHp,hp:S.hp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP,weather:S.weather}))}catch(e){}
+ try{localStorage.setItem('zms_save',JSON.stringify({classId:S.classId,mode:S.mode,class2Id:S.class2Id,day:S.day,wave:S.wave,gold:S.gold,score:S.score,kills:S.kills,maxHp:S.maxHp,hp:S.hp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP,weather:S.weather}))}catch(e){}
 }
 function loadSave(){
  try{const d=JSON.parse(localStorage.getItem('zms_save')||'null');return d&&d.classId?d:null}catch(e){return null}
 }
 function applySave(d){
  S=freshState(d.classId);S.wave=d.wave||1;S.gold=d.gold||0;S.maxHp=d.maxHp||100;S.hp=clamp(d.hp||S.maxHp,1,S.maxHp);S.up=Object.assign({dmg:0,vit:0,greed:0,perk:0},d.up);
- S.heroLvl=d.heroLvl||1;S.heroXP=d.heroXP||0;S.score=d.score||0;S.kills=d.kills||0;S.weather=d.weather||'clear';
+ S.heroLvl=d.heroLvl||1;S.heroXP=d.heroXP||0;S.score=d.score||0;S.kills=d.kills||0;S.weather=d.weather||'clear';S.mode=d.mode||'classic';S.class2Id=d.class2Id||null;S.day=d.day||null;
 }
 
 // ---------- LAYOUT ----------
@@ -522,7 +633,7 @@ function rollWeather(){
   .filter(function(e){return e[0]!==prev});
  let total=0;
  for(const e of table)total+=e[1];
- let r=Math.random()*total,pick=table[table.length-1][0];
+ let r=rnd()*total,pick=table[table.length-1][0];
  for(const e of table){r-=e[1];if(r<=0){pick=e[0];break}}
  return pick;
 }
@@ -778,7 +889,7 @@ function applyWeather(){
 }
 // ---------- META (achievements + lifetime stats; survives runs, zombietoss pattern) ----------
 const META_KEY='zms_meta';
-let META={ach:{},stats:{totalKills:0,bossKills:0,bestWave:0,combos4:0,combos5:0,multiMatches:0,bestChain:0,closeCall:0,classes:[]}};
+let META={ach:{},stats:{totalKills:0,bossKills:0,bestWave:0,combos4:0,combos5:0,multiMatches:0,bestChain:0,closeCall:0,classes:[],challengesDone:0,dailiesDone:0,coopWaves:0,mutWaves:0,bestBossRush:0,bestSurvival:0}};
 function metaLoad(){try{const d=JSON.parse(localStorage.getItem(META_KEY)||'null');if(d){META.ach=d.ach||{};META.stats=Object.assign(META.stats,d.stats||{})}}catch(e){}}
 function metaSave(){try{localStorage.setItem(META_KEY,JSON.stringify(META))}catch(e){}}
 const ACH=[
@@ -801,7 +912,15 @@ const ACH=[
  {id:'rich',name:'War Chest',icon:'\u{1F4B0}',desc:'Hold 500 gold at once',cond:()=>!!(S&&S.gold>=500)},
  {id:'versatile',name:'Versatile',icon:'\u{1F3AD}',desc:'Play all 5 classes',cond:()=>META.stats.classes.length>=5,rarity:'rare'},
  {id:'stormcaller',name:'Stormcaller',icon:'\u{26A1}',desc:'Land a storm-boosted bolt match',cond:()=>!!(S&&S._stormBolt),rarity:'rare'},
- {id:'closecall',name:'Close Call',icon:'\u{2764}\u{FE0F}',desc:'Clear a wave with the barricade under 10 HP',cond:()=>META.stats.closeCall>=1,rarity:'rare'}
+ {id:'closecall',name:'Close Call',icon:'\u{2764}\u{FE0F}',desc:'Clear a wave with the barricade under 10 HP',cond:()=>META.stats.closeCall>=1,rarity:'rare'},
+ {id:'challenger',name:'Challenger',icon:'\u{1F3C5}',desc:'Complete 5 wave challenges',cond:()=>META.stats.challengesDone>=5},
+ {id:'champ',name:'Challenge Champion',icon:'\u{1F3C6}',desc:'Complete 15 wave challenges',cond:()=>META.stats.challengesDone>=15,rarity:'rare'},
+ {id:'daily1',name:'Daily Grind',icon:'\u{1F4C5}',desc:'Complete a daily challenge',cond:()=>META.stats.dailiesDone>=1},
+ {id:'daily7',name:'Creature of Habit',icon:'\u{1F5D3}\u{FE0F}',desc:'Complete 7 daily challenges',cond:()=>META.stats.dailiesDone>=7,rarity:'rare'},
+ {id:'buddy',name:'Buddy System',icon:'\u{1F91D}',desc:'Clear a wave in co-op mode',cond:()=>META.stats.coopWaves>=1},
+ {id:'mutwin',name:'Mutation Station',icon:'\u{1F9EC}',desc:'Clear a wave under 2 mutators',cond:()=>META.stats.mutWaves>=1},
+ {id:'rush10',name:'Rush Hour',icon:'\u{1F480}',desc:'Reach wave 10 in Boss Rush',cond:()=>META.stats.bestBossRush>=10,rarity:'rare'},
+ {id:'surv10',name:'Still Standing',icon:'\u{1F94A}',desc:'Reach wave 10 in Survival',cond:()=>META.stats.bestSurvival>=10,rarity:'rare'}
 ];
 function unlockAch(a){
  META.ach[a.id]=Date.now();metaSave();
@@ -842,6 +961,7 @@ function comboReward(groups,chain){
  const maxSize=groups.reduce((m,g)=>Math.max(m,g.cells.length),0);
  const multi=groups.length>=2?groups.length:0;
  if(multi)META.stats.multiMatches++;
+ if(maxSize>=4&&S)S._bigMatch=true;
  if(maxSize>=5)META.stats.combos5++;
  else if(maxSize>=4)META.stats.combos4++;
  if(chain>META.stats.bestChain)META.stats.bestChain=chain;
@@ -863,7 +983,8 @@ function comboReward(groups,chain){
 
 // ---------- COMBAT ----------
 function classDmgMult(){let m=1;if(S.classId==='soldier')m*=1.3;if(S.classId==='ranger')m*=1.15;if(S.classId==='cleric')m*=1.1;if(S.classId==='necro')m*=1.2;return m}
-function heroPos(){const f=$('field');return{x:32,y:f.clientHeight/2}}
+function heroPos(){const f=$('field');return{x:32,y:f.clientHeight*(S&&S.mode==='coop'?0.3:0.5)}}
+function allyPos(){const f=$('field');return{x:32,y:f.clientHeight*0.7}}
 function zPos(z){const f=$('field');const fw=f.clientWidth-40;return{x:10+z.x*fw+(z.size||36)/2,y:z.lane*LH+LH/2}}
 function heroAtkAnim(){
  const h=$('hero');if(!h)return;
@@ -917,7 +1038,7 @@ function attack(groups,chain,comboMult){
   let crit=false;
   let critCh=(S.classId==='soldier'&&S.up.perk>0)?0.1*S.up.perk:0;
   if(hasPassive('critburst'))critCh+=0.15;
-  if(S.classId==='soldier'&&critCh>0&&Math.random()<critCh){dmg*=hasPassive('critburst')?4:3;crit=true}
+  if(S.classId==='soldier'&&critCh>0&&rnd()<critCh){dmg*=hasPassive('critburst')?4:3;crit=true}
   dealDamage(target,dmg,cn,crit);
   if(cn==='ice'){const dur=(S.classId==='mage'?3+S.up.perk:2)*(S.weather==='snow'?1.5:1);zs.filter(z=>z.lane===target.lane).forEach(z=>z.slowT=Math.max(z.slowT,dur))}
   if(cn==='nature')healBarricade(size*2*(S.classId==='cleric'?2:1)*(S.weather==='rain'?1.5:1));
@@ -956,7 +1077,10 @@ function killZombie(z){
  S.score+=ZPOINTS[z.type]||100;S.kills++;
  META.stats.totalKills++;if(z.type==='boss')META.stats.bossKills++;metaSave();checkAch();
  $('uscore').textContent=S.score;
- const g=Math.round(ZTYPES[z.type].gold*(1+0.25*S.up.greed));
+ if(S.chal&&S.chal.id==='killrace')S.chal.prog++;
+ const g=Math.round(ZTYPES[z.type].gold*(1+0.25*S.up.greed)*(S.mode==='survival'?1.5:1)*(hasMut('goldrush')?2:1)*(S.mode==='bossrush'&&z.type==='boss'?2:1));
+ if(S.chal&&S.chal.id==='earner')S.chal.prog+=g;
+ S._waveGold=(S._waveGold||0)+g;
  S.gold+=g;$('ugold').textContent=S.gold;
  floatText(z,'+'+g+'\u{1F4B0}','#ffd24a');
  z.el.classList.add('dying');
@@ -972,7 +1096,7 @@ function killZombie(z){
  setTimeout(()=>{if(z.el)z.el.remove()},380);
  setTimeout(saveGame,0);
 }
-function healBarricade(n){S.hp=clamp(S.hp+n,0,S.maxHp);updateHud()}
+function healBarricade(n){if(S&&S.mode==='survival')return;S.hp=clamp(S.hp+n,0,S.maxHp);updateHud()}
 
 function floatText(z,txt,color){
  const f=$('field');const el=document.createElement('div');
@@ -1006,8 +1130,8 @@ function spawnGore(x,y,n){
   if(GRE.chunks.length>=CHUNK_MAX)break;
   const k=GORE_KEYS[Math.floor(rand(0,GORE_KEYS.length))],cfg=GORE_TYPES[k];
   GRE.chunks.push({x:x+rand(-8,8),y:y+rand(-5,5),
-   vx:rand(cfg.vx[0],cfg.vx[1])*(Math.random()<.5?-1:1),vy:rand(cfg.vy[0],cfg.vy[1]),
-   w:cfg.w,h:cfg.h,rot:rand(0,6.28),rotS:rand(cfg.rotS[0],cfg.rotS[1])*(Math.random()<.5?-1:1),
+   vx:rand(cfg.vx[0],cfg.vx[1])*(rnd()<.5?-1:1),vy:rand(cfg.vy[0],cfg.vy[1]),
+   w:cfg.w,h:cfg.h,rot:rand(0,6.28),rotS:rand(cfg.rotS[0],cfg.rotS[1])*(rnd()<.5?-1:1),
    g:cfg.g,bounce:cfg.bounce,life:cfg.life,max:cfg.life,type:k,
    c:cfg.colors[Math.floor(rand(0,cfg.colors.length))],bounced:false});
  }
@@ -1074,15 +1198,23 @@ function spawnZombie(forceType){
  let type=forceType;
  if(!type){
   const ws=spawnWeights(w);const total=Object.values(ws).reduce((a,b)=>a+b,0);
-  let r=Math.random()*total;
+  let r=rnd()*total;
   for(const k in ws){r-=ws[k];if(r<=0){type=k;break}}
   type=type||'regular';
  }
+ if(!forceType&&hasMut('elite')&&type==='regular'&&rnd()<.4)type='armored';
  const cfg=ZTYPES[type];
  const hpScale=1+0.22*(w-1),spdScale=Math.min(1.6,1+0.04*(w-1));
+ let hpm=1,spdm=1;
+ if(hasMut('thick'))hpm*=1.45;
+ if(hasMut('glass')){hpm*=0.7;spdm*=1.25}
+ if(hasMut('swift'))spdm*=1.3;
+ if(S.mode==='swarm')hpm*=0.85;
+ if(S.mode==='coop')hpm*=1.5;
+ if(S.mode==='bossrush'&&type==='boss')hpm*=1.15;
  const z={id:++S.zid,type:type,lane:Math.floor(rand(0,LANES)),x:1.08,
-  hp:Math.round(cfg.hp*hpScale),maxHp:Math.round(cfg.hp*hpScale),
-  spd:cfg.spd*spdScale*rand(0.9,1.1),armor:cfg.armor,gold:cfg.gold,
+  hp:Math.round(cfg.hp*hpScale*hpm),maxHp:Math.round(cfg.hp*hpScale*hpm),
+  spd:cfg.spd*spdScale*spdm*rand(0.9,1.1),armor:cfg.armor,gold:cfg.gold,
   dps:Math.round(cfg.dps*(1+0.1*(w-1))),slowT:0,frozenT:0,attackT:0,alive:true,size:cfg.size,el:null};
  const el=document.createElement('div');
  el.className='zombie'+(cfg.cls?' '+cfg.cls:'');
@@ -1107,6 +1239,7 @@ function loop(t){
  const dt=Math.min(0.05,(t-lastT)/1000||0);lastT=t;
  // ability cooldown
  if(S.abCD>0){const before=Math.ceil(S.abCD);S.abCD=Math.max(0,S.abCD-dt);if(Math.ceil(S.abCD)!==before)updateAbilityBtn()}
+ if(S.ab2CD>0){const before2=Math.ceil(S.ab2CD);S.ab2CD=Math.max(0,S.ab2CD-dt);if(Math.ceil(S.ab2CD)!==before2)updateAbilityBtn()}
  // spawning
  if(S.spawnQueue>0){
   S.spawnT-=dt;
@@ -1115,6 +1248,10 @@ function loop(t){
    S.spawnQueue--;S.spawnT=S.spawnInt*rand(0.7,1.3);
   }
  }
+ // v7: ally auto-attack, stampede event, supply drop
+ if(S.mode==='coop'){S.allyT-=dt;if(S.allyT<=0){S.allyT=1.35;allyAttack()}}
+ if(S.stampedeT>0){S.stampedeT-=dt;if(S.stampedeT<=0){for(let si=0;si<4;si++)spawnZombie('runner');toast('\u{1F40E} STAMPEDE! Runners charge!');ns(.15,.08)}}
+ if(S.dropT>0){S.dropT-=dt;if(S.dropT<=0)supplyDrop()}
  // move
  let reached=false;
  S.zombies.forEach(z=>{
@@ -1126,7 +1263,7 @@ function loop(t){
   if(z.x<=0.01){
    z.x=0.01;
    z.attackT+=dt;
-   if(z.attackT>=1){z.attackT=0;S.hp-=z.dps;reached=true;floatText(z,'-'+z.dps,'#f66')}
+   if(z.attackT>=1){z.attackT=0;S.hp-=z.dps;S._waveHits++;reached=true;floatText(z,'-'+z.dps,'#f66')}
   }
   updateZombieEl(z);
  });
@@ -1149,22 +1286,52 @@ requestAnimationFrame(loop);
 
 // ---------- WAVES ----------
 function startWave(n,keepWeather){
+ if(S.mode==='daily'&&n>DAILY_WAVES){dailyComplete();return}
  S.wave=n;S.over=false;
- if(!keepWeather)S.weather=rollWeather();applyWeather();META.stats.bestWave=Math.max(META.stats.bestWave,n);metaSave();checkAch();
- const isBoss=n%10===0;
- S.spawnQueue=isBoss?Math.max(3,Math.ceil((4+2*n)/2)):4+2*n+(n%5===0?2:0);
+ S._waveHits=0;S._bigMatch=false;S._waveGold=0;S.allyT=1.3;S.stampedeT=0;S.dropT=0;
+ if(!keepWeather)S.weather=rollWeather();applyWeather();META.stats.bestWave=Math.max(META.stats.bestWave,n);
+ if(S.mode==='bossrush')META.stats.bestBossRush=Math.max(META.stats.bestBossRush||0,n);
+ if(S.mode==='survival')META.stats.bestSurvival=Math.max(META.stats.bestSurvival||0,n);
+ metaSave();checkAch();
+ rollMutators(n);rollChallenge(n);
+ const isBoss=(S.mode==='bossrush')||n%10===0;
+ let q=isBoss?Math.max(3,Math.ceil((4+2*n)/2)):4+2*n+(n%5===0?2:0);
+ if(S.mode==='swarm')q=Math.round(q*1.8);
+ if(S.mode==='coop')q=Math.round(q*1.3);
+ S.spawnQueue=q;
  S.bossPending=isBoss;
- S.spawnInt=Math.max(0.7,2.1-0.1*n);
+ S.spawnInt=Math.max(0.7,2.1-0.1*n)*(S.mode==='swarm'?0.65:1);
  S.spawnT=0.5;
+ if(hasMut('stampede'))S.stampedeT=4+rand(0,5);
+ if(n>=4&&rnd()<.18)S.dropT=5+rand(0,6);
  S.hp=clamp(S.hp,1,S.maxHp);
  S.screen='game';
  $('ovUpgrade').style.display='none';$('ovOver').style.display='none';$('ovTitle').style.display='none';
- updateHud();updateHeroHud();renderAbilityBtn();sfx.wave();if(isBoss)toast('BOSS WAVE '+n+'!');const wdef=WEATHERS[S.weather];if(wdef&&wdef.desc)setTimeout(()=>toast(wdef.icon+' '+wdef.name+': '+wdef.desc),isBoss?1600:250);saveGame();
+ updateHud();updateHeroHud();renderAbilityBtn();sfx.wave();
+ if(isBoss)toast((S.mode==='bossrush'?'BOSS RUSH - WAVE ':'BOSS WAVE ')+n+'!');
+ const notes=[];
+ const wdef=WEATHERS[S.weather];if(wdef&&wdef.desc)notes.push(wdef.icon+' '+wdef.name+': '+wdef.desc);
+ S.muts.forEach(m=>{const md=MUTATORS[m];if(md)notes.push(md.icon+' '+md.name+': '+md.desc)});
+ if(S.chal)notes.push(S.chal.icon+' CHALLENGE: '+S.chal.name+' - '+S.chal.desc);
+ notes.forEach((t,i)=>setTimeout(()=>toast(t),(isBoss?1600:250)+i*1500));
+ saveGame();
 }
 function waveComplete(){
  if(S.over)return;
  S.screen='upgrade';
+ const b2u=$('ab2Btn');if(b2u)b2u.style.display='none';
  if(S.hp<10){META.stats.closeCall=1;metaSave()}
+ if(S.mode==='coop'){META.stats.coopWaves=(META.stats.coopWaves||0)+1;metaSave()}
+ if(S.muts&&S.muts.length>=2){META.stats.mutWaves=(META.stats.mutWaves||0)+1;metaSave()}
+ if(S.chal){
+  const c=S.chal;let ok=false;
+  if(c.id==='killrace')ok=c.prog>=12;
+  else if(c.id==='flawless')ok=!S._waveHits;
+  else if(c.id==='bigmatch')ok=!!S._bigMatch;
+  else if(c.id==='earner')ok=c.prog>=80;
+  if(ok){const bg=40+S.wave*2;S.gold+=bg;$('ugold').textContent=S.gold;gainXP(40);META.stats.challengesDone=(META.stats.challengesDone||0)+1;metaSave();setTimeout(()=>toast('\u{2705} CHALLENGE COMPLETE: '+c.name+'! +'+bg+' gold, +40 XP'),700)}
+  else setTimeout(()=>toast('\u{274C} Challenge missed: '+c.name),700);
+ }
  checkAch();
  $('abBtn').style.display='none';
  S.zombies.forEach(z=>{if(z.el)z.el.remove()});
@@ -1181,11 +1348,28 @@ function waveComplete(){
 }
 function gameOver(){
  S.over=true;S.screen='over';
- $('abBtn').style.display='none';
+ $('abBtn').style.display='none';const b2=$('ab2Btn');if(b2)b2.style.display='none';
  sfx.over();
+ $('ovOver').querySelector('h2').textContent='THE HORDE BROKE THROUGH';
+ if(S.mode==='survival'||S.mode==='daily'){try{localStorage.removeItem('zms_save')}catch(e){}}
  const rank=lbRecord();
- $('overInfo').innerHTML='You fell on wave '+S.wave+' with <b style="color:#ffd24a">'+S.score+'</b> pts ('+S.kills+' kills), hero Lv'+S.heroLvl+' - rank #'+rank+' locally. Class, gold, upgrades, hero level and score carry over.'+lbHtml(10);
+ let extra='';
+ if(S.mode==='daily')extra='<br><b>Daily code:</b> <code>'+dailyCode()+'</code> - every player today fights this exact run. Compare codes.';
+ if(S.mode==='survival')extra='<br><b>Survival:</b> the dead stay dead - save wiped.';
+ $('overInfo').innerHTML='You fell on wave '+S.wave+' with <b style="color:#ffd24a">'+S.score+'</b> pts ('+S.kills+' kills), hero Lv'+S.heroLvl+' - rank #'+rank+' locally. Class, gold, upgrades, hero level and score carry over.'+extra+lbHtml(10);
  saveGame();
+ $('ovOver').style.display='flex';
+}
+function dailyComplete(){
+ S.over=true;S.screen='over';
+ $('abBtn').style.display='none';const b2=$('ab2Btn');if(b2)b2.style.display='none';
+ sfx.wave();sfx.combo();
+ try{localStorage.removeItem('zms_save')}catch(e){}
+ META.stats.dailiesDone=(META.stats.dailiesDone||0)+1;metaSave();
+ const rank=lbRecord();
+ checkAch();
+ $('ovOver').querySelector('h2').textContent='DAILY CHALLENGE COMPLETE';
+ $('overInfo').innerHTML='You cleared all '+DAILY_WAVES+' waves of today\u2019s seed with <b style="color:#ffd24a">'+S.score+'</b> pts ('+S.kills+' kills) - rank #'+rank+' locally.<br><b>Daily code:</b> <code>'+dailyCode()+'</code> - every player today fights this exact run. Compare codes.'+lbHtml(10);
  $('ovOver').style.display='flex';
 }
 
@@ -1225,6 +1409,7 @@ function updateHud(){
  $('ugold').textContent=S.gold;
  $('uscore').textContent=S.score;
  $('uwave').textContent=S.wave;
+ const um=$('umuts');if(um)um.textContent=(S.mode&&S.mode!=='classic'?MODES[S.mode].icon:'')+(S.muts?S.muts.map(m=>MUTATORS[m].icon).join(''):'');
 }
 let toastT=null;
 function toast(msg){const t=$('toast');t.textContent=msg;t.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>t.style.opacity=0,1400)}
@@ -1252,25 +1437,72 @@ function lbHtml(n){
  return h+'</div>';
 }
 
+// ---------- CO-OP ALLY (v7: local 2P - P2's hero auto-fights with their own ability button) ----------
+function ensureAlly(){
+ const on=S&&S.mode==='coop'&&allyDef();
+ const h1=$('hero');if(h1)h1.classList.toggle('coopp1',!!on);
+ if(!on){const h2=$('hero2');if(h2)h2.remove();const b2=$('ab2Btn');if(b2)b2.remove();return}
+ if(!$('hero2')){const h=document.createElement('div');h.id='hero2';$('field').appendChild(h)}
+ $('hero2').textContent=allyDef().emoji;
+ if(!$('ab2Btn')){const b=document.createElement('button');b.id='ab2Btn';b.style.display='none';$('field').appendChild(b);bindTap(b,castAllyAbility)}
+}
+function allyAtkAnim(){
+ const h=$('hero2');if(!h)return;
+ h.classList.remove('atk');void h.offsetWidth;h.classList.add('atk');
+ setTimeout(()=>h.classList.remove('atk'),320);
+}
+function allyAttack(){
+ if(!S||S.over)return;
+ const zs=S.zombies.filter(z=>z.alive);if(!zs.length)return;
+ const t=zs.reduce((a,b)=>b.x>a.x?b:a);
+ const d=allyDef();if(!d)return;
+ allyAtkAnim();
+ spawnProj(allyPos(),zPos(t),d.proj,d.projDur);
+ const cm=S.class2Id==='soldier'?1.3:S.class2Id==='ranger'?1.15:S.class2Id==='cleric'?1.1:S.class2Id==='necro'?1.2:1;
+ dealDamage(t,(10+2*S.heroLvl)*(1+0.2*S.up.dmg)*cm,'bolt',false);
+}
+
 // ---------- FLOW ----------
-function newGame(classId){
- S=freshState(classId);
+function newGame(classId,mode,class2Id){
+ mode=mode||'classic';
+ RNGF=Math.random;
+ if(mode==='daily')RNGF=mulberry32(dailySeed());
+ S=freshState(classId,mode,class2Id);
+ if(mode==='daily')S.day=dailyDayStr();
  if(META.stats.classes.indexOf(classId)<0){META.stats.classes.push(classId);metaSave()}checkAch();
  S.grid=[];document.querySelectorAll('#grid .tile').forEach(e=>e.remove());
  document.querySelectorAll('#field .zombie').forEach(e=>e.remove());
- buildGrid();layout();startWave(1);saveGame();
+ document.querySelectorAll('#field .drop').forEach(e=>e.remove());
+ buildGrid();layout();ensureAlly();startWave(1);saveGame();
 }
 function continueGame(d){
  applySave(d);
+ if(S.mode==='daily')RNGF=mulberry32(parseInt(S.day||dailyDayStr(),10));else RNGF=Math.random;
  S.grid=[];document.querySelectorAll('#grid .tile').forEach(e=>e.remove());
  document.querySelectorAll('#field .zombie').forEach(e=>e.remove());
- buildGrid();layout();startWave(S.wave,true);
+ document.querySelectorAll('#field .drop').forEach(e=>e.remove());
+ buildGrid();layout();ensureAlly();startWave(S.wave,true);
 }
-bindTap($('btnSoldier'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('soldier')});
-bindTap($('btnMage'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('mage')});
-bindTap($('btnRanger'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('ranger')});
-bindTap($('btnCleric'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('cleric')});
-bindTap($('btnNecro'),()=>{try{localStorage.removeItem('zms_save')}catch(e){};newGame('necro')});
+let pendingMode='classic',pendingP1=null;
+function selectMode(m){
+ pendingMode=m;pendingP1=null;
+ document.querySelectorAll('#modeRow .modebtn').forEach(b=>b.classList.toggle('sel',b.getAttribute('data-mode')===m));
+ $('modeDesc').textContent=MODES[m].icon+' '+MODES[m].desc+(m==='daily'?' Today\u2019s seed: '+dailyDayStr()+'.':'');
+ $('pickLabel').textContent=m==='coop'?'PLAYER 1 - PICK YOUR HERO':'PICK YOUR HERO';
+}
+function pickClass(c){
+ if(pendingMode==='coop'&&!pendingP1){pendingP1=c;$('pickLabel').textContent='PLAYER 2 - PICK YOUR HERO';return}
+ const m=pendingMode,p1=pendingP1||c,p2=pendingP1?c:null;
+ pendingP1=null;$('pickLabel').textContent='PICK YOUR HERO';
+ try{localStorage.removeItem('zms_save')}catch(e){}
+ newGame(p1,m,p2);
+}
+bindTap($('btnSoldier'),()=>pickClass('soldier'));
+bindTap($('btnMage'),()=>pickClass('mage'));
+bindTap($('btnRanger'),()=>pickClass('ranger'));
+bindTap($('btnCleric'),()=>pickClass('cleric'));
+bindTap($('btnNecro'),()=>pickClass('necro'));
+document.querySelectorAll('#modeRow .modebtn').forEach(b=>bindTap(b,()=>selectMode(b.getAttribute('data-mode'))));
 bindTap($('btnContinue'),()=>{const d=loadSave();if(d)continueGame(d)});
 bindTap($('btnNext'),()=>startWave(S.wave+1));
 bindTap($('btnAch'),()=>{renderAch();$('ovAch').style.display='flex'});
@@ -1278,13 +1510,14 @@ bindTap($('btnAch2'),()=>{renderAch();$('ovAch').style.display='flex'});
 bindTap($('btnAchClose'),()=>{$('ovAch').style.display='none'});
 bindTap($('btnRestart'),()=>{
  // keep class/gold/upgrades/hero, back to wave 1
- const keep={classId:S.classId,wave:1,gold:S.gold,score:S.score,kills:S.kills,maxHp:S.maxHp,hp:S.maxHp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP};
+ const keep={classId:S.classId,mode:S.mode,class2Id:S.class2Id,day:S.day,wave:1,gold:S.gold,score:S.score,kills:S.kills,maxHp:S.maxHp,hp:S.maxHp,up:S.up,heroLvl:S.heroLvl,heroXP:S.heroXP};
  try{localStorage.setItem('zms_save',JSON.stringify(keep))}catch(e){}
  continueGame(keep);
 });
 // boot
 (function(){
  ensureHero();metaLoad();
+ selectMode('classic');
  const d=loadSave();
  if(d){const b=$('btnContinue');b.style.display='block';const cn=(HEROES[d.classId]?d.classId:'soldier');b.textContent='CONTINUE \u2014 WAVE '+d.wave+' ('+cn.charAt(0).toUpperCase()+cn.slice(1)+', Lv'+(d.heroLvl||1)+')'}
  $('titleBoard').innerHTML=lbHtml(5);
@@ -1300,6 +1533,7 @@ window.__ZT={get S(){return S},newGame:newGame,continueGame:continueGame,loadSav
  findSwap:function(){for(let r=0;r<G;r++)for(let c=0;c<G;c++){if(c<G-1&&wouldMatch(r,c,r,c+1))return[{r:r,c:c},{r:r,c:c+1}];if(r<G-1&&wouldMatch(r,c,r+1,c))return[{r:r,c:c},{r:r+1,c:c}]}return null},
  findInvalidSwap:function(){for(let r=0;r<G;r++)for(let c=0;c<G;c++){if(c<G-1&&!wouldMatch(r,c,r,c+1))return[{r:r,c:c},{r:r,c:c+1}];if(r<G-1&&!wouldMatch(r,c,r+1,c))return[{r:r,c:c},{r:r+1,c:c}]}return null},
  doSwap:doSwap,spawnZombie:spawnZombie,startWave:startWave,waveComplete:waveComplete,
+ selectMode:selectMode,pickClass:pickClass,MODES:MODES,MUTATORS:MUTATORS,CHALLENGES:CHALLENGES,rollMutators:rollMutators,rollChallenge:rollChallenge,hasMut:hasMut,dailyCode:dailyCode,dailyComplete:dailyComplete,dailyDayStr:dailyDayStr,supplyDrop:supplyDrop,allyAttack:allyAttack,castAllyAbility:castAllyAbility,ensureAlly:ensureAlly,allyPos:allyPos,mulberry32:mulberry32,
  get META(){return META},checkAch:checkAch,rollWeather:rollWeather,applyWeather:applyWeather,ACH:ACH,WEATHERS:WEATHERS,comboReward:comboReward,renderAch:renderAch,weatherFrame:weatherFrame,goreFrame:goreFrame,
  spawnBlood:spawnBlood,spawnGore:spawnGore,addSplat:addSplat,
  get wst(){return wst},get GRE(){return GRE},get wcv(){return wcv},
